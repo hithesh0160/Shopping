@@ -1,0 +1,7 @@
+{
+    "java.debug.settings.onBuildFailureProceed": true,
+    "maven.executable.path": "C:\\Users\\hites\\Downloads\\Compressed\\apache-maven-3.9.9-bin\\apache-maven-3.9.9\\bin\\mvn.cmd",
+    "maven.executable.options": "\"maven.executable.path\": \"C:\\\\Users\\\\hites\\\\Downloads\\\\Compressed\\\\apache-maven-3.9.9-bin\\\\apache-maven-3.9.9\\\\bin\"",
+    "java.maven.downloadSources": true,
+    "java.configuration.updateBuildConfiguration": "interactive"
+}
