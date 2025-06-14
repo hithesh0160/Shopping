@@ -1,0 +1,9 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
+<suite name="Shop Suite">
+    <test name="Shop Tests">
+        <classes>
+            <!-- List your test classes here -->
+            <class name="com.shop.YourTestClass"/>
+        </classes>
+    </test>
+</suite>
