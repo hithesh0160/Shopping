@@ -17,6 +17,7 @@ jobs:
 
       - name: Build with Maven
         run: mvn -B clean install
+        working-directory: ./Naukri
 
       - name: Run a script
         run: echo "This workflow was successful"
