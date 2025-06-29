@@ -8,24 +8,7 @@ import com.amazon.utils.UrlGenerator;
 import org.testng.annotations.Test;
 
 public class TabletsTest {
-    // Old main method (commented out)
-    /*
-    public static void main(String[] args) throws Exception {
-        // Load URL from properties file
-        PropertiesFileReader reader = new PropertiesFileReader("C:\\Users\\hites\\VSCode\\shop\\src\\main\\resources\\url.properties");
-        String url = reader.getProperty("amazonTabletsUrl");
-
-        String htmlBody = HtmlBodyExtractor.getHtmlBodyFromUrl(url);
-        System.out.println("\n--- htmlBody ---");
-        System.out.println(htmlBody); 
-               
-        // Print the extracted data
-        System.out.println("\n--- Extracted Data ---");
-        ExtractDataFromResponse.extractData( htmlBody, AmazonLocators.productName, AmazonLocators.productPrice);
-    }
-    */
-
-    /*
+    
     public static void main(String[] args) throws Exception {
         // Use UrlGenerator to parameterize the new Amazon URL structure
         String url = UrlGenerator.generateUrlWithParams(
@@ -45,7 +28,6 @@ public class TabletsTest {
         System.out.println("\n--- Extracted Data ---");
         ExtractDataFromResponse.extractData(htmlBody, AmazonLocators.productName, AmazonLocators.productPrice);
     }
-    */
 
     @Test
     public void testExtractTabletData() throws Exception {
