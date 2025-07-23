@@ -19,7 +19,7 @@ jobs:
       - name: Run Maven and capture output
         id: capture_output
         working-directory: ./shop
-        run: OUTPUT="$(mvn -B clean install 2>&1)" && echo "$OUTPUT" && TRUNCATED_OUTPUT="$(echo "$OUTPUT" | tail -n 20 | sed 's/`/\\`/g')" && echo "BUILD_OUTPUT<<EOF" >> $GITHUB_ENV && echo "$TRUNCATED_OUTPUT" >> $GITHUB_ENV && echo "EOF" >> $GITHUB_ENV
+        run: OUTPUT="$(mvn -B clean install 2>&1)" && echo "$OUTPUT" && echo "✅✅✅ MAVEN BUILD DONE. CAPTURE COMPLETED ✅✅✅" && TRUNCATED_OUTPUT="$(echo "$OUTPUT" | tail -n 20 | sed 's/`/\\`/g')" && echo "BUILD_OUTPUT<<EOF" >> $GITHUB_ENV && echo "$TRUNCATED_OUTPUT" >> $GITHUB_ENV && echo "EOF" >> $GITHUB_ENV
 
       - name: Send Telegram Message on Success
         if: ${{ success() }}
