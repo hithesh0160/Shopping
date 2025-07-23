@@ -18,8 +18,6 @@ jobs:
 
       - name: Build with Maven and capture output
         id: build_step
-
-      - name: Build and test
         run: mvn -B clean install | tee build_output.txt
         working-directory: ./shop
 
