@@ -20,11 +20,15 @@ jobs:
         id: capture_output
         working-directory: ./shop
         run: |
-          mvn -B clean install 2>&1 | tee full_output.txt
-          echo "✅✅✅ MAVEN BUILD DONE. CAPTURE COMPLETED ✅✅✅"
-          echo "BUILD_OUTPUT<<EOF" >> $GITHUB_ENV
-          tail -n 20 full_output.txt | sed 's/`/\\`/g' >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          { 
+            MAVEN_OUTPUT=$(mktemp)
+            mvn -B clean install 2>&1 | tee >(cat > "$MAVEN_OUTPUT")
+            echo "✅✅✅ MAVEN BUILD DONE. CAPTURE COMPLETED ✅✅✅"
+            TAIL_OUTPUT=$(tail -n 20 "$MAVEN_OUTPUT" | sed 's/`/\\`/g')
+            echo "BUILD_OUTPUT<<EOF" >> $GITHUB_ENV
+            echo "$TAIL_OUTPUT" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+          }
 
       - name: Send Telegram Message on Success
         if: ${{ success() }}
