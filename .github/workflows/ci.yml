@@ -16,33 +16,15 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Build with Maven and capture output
-        id: build_step
-        run: mvn -B clean install | tee build_output.txt
+      - name: Run Maven and capture output
+        id: capture_output
         working-directory: ./shop
-
-      - name: Read and prepare build output
-        id: read_output
-        run: |
-          TRUNCATED_OUTPUT=$(tail -n 20 build_output.txt | sed 's/`/\\`/g')
-          echo "BUILD_OUTPUT<<EOF" >> $GITHUB_ENV
-          echo "$TRUNCATED_OUTPUT" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+        run: echo "BUILD_OUTPUT<<EOF" >> $GITHUB_ENV && mvn -B clean install 2>&1 | tee /dev/stdout | tail -n 20 | sed 's/`/\\`/g' >> $GITHUB_ENV && echo "EOF" >> $GITHUB_ENV
 
       - name: Send Telegram Message on Success
         if: ${{ success() }}
-        run: |
-          MESSAGE=$(cat <<EOF ✅ *Build Success* for \`${{ github.repository }}\`!🔗 [View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})📝 Output (last 20 lines):\`\`\`${{ env.BUILD_OUTPUT }}\`\`\`EOF)
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
-            --data-urlencode chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-            --data-urlencode text="$MESSAGE" \
-            -d parse_mode=Markdown
+        run: MESSAGE="✅ *Build Success* for \`${{ github.repository }}\`!\n\n🔗 [View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n📝 Output (last 20 lines):\n\`\`\`\n${{ env.BUILD_OUTPUT }}\n\`\`\`" && curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" --data-urlencode chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data-urlencode text="$MESSAGE" -d parse_mode=Markdown
 
       - name: Send Telegram Message on Failure
         if: ${{ failure() }}
-        run: |
-          MESSAGE=$(cat <<EOF❌ *Build Failed* for \`${{ github.repository }}\`!🔗 [View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})📝 Output (last 20 lines):\`\`\`${{ env.BUILD_OUTPUT }}\`\`\`EOF)
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
-            --data-urlencode chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-            --data-urlencode text="$MESSAGE" \
-            -d parse_mode=Markdown
+        run: MESSAGE="❌ *Build Failed* for \`${{ github.repository }}\`!\n\n🔗 [View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n📝 Output (last 20 lines):\n\`\`\`\n${{ env.BUILD_OUTPUT }}\n\`\`\`" && curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" --data-urlencode chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data-urlencode text="$MESSAGE" -d parse_mode=Markdown
