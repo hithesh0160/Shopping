@@ -6,6 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -15,9 +16,34 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Build with Maven
-        run: mvn -B clean install
-        working-directory: ./Naukri
+      - name: Build with Maven and capture output
+        id: build_step
+        run: |
+          mvn -B clean install | tee build_output.txt
 
-      - name: Run a script
-        run: echo "This workflow was successful"
+      - name: Read build output
+        id: read_output
+        run: |
+          echo "BUILD_OUTPUT<<EOF" >> $GITHUB_ENV
+          cat build_output.txt >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Send Telegram Message on Success
+        if: ${{ success() }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
+          -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+          --data-urlencode text="✅ GitHub Actions Build Success for ${{ github.repository }}!
+
+Output:
+${{ env.BUILD_OUTPUT }}""
+
+      - name: Send Telegram Message on Failure
+        if: ${{ failure() }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
+          -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+          --data-urlencode text="❌ GitHub Actions Build Failed for ${{ github.repository }}!
+
+Output:
+${{ env.BUILD_OUTPUT }}"
