@@ -32,29 +32,17 @@ jobs:
       - name: Send Telegram Message on Success
         if: ${{ success() }}
         run: |
+          MESSAGE=$(cat <<EOF ✅ *Build Success* for \`${{ github.repository }}\`!🔗 [View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})📝 Output (last 20 lines):\`\`\`${{ env.BUILD_OUTPUT }}\`\`\`EOF)
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
-          --data-urlencode chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-          --data-urlencode text="✅ *Build Success* for \`${{ github.repository }}\`!
-
-🔗 [View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-
-📝 Output (last 20 lines):
-\`\`\`
-${{ env.BUILD_OUTPUT }}
-\`\`\`" \
-          -d parse_mode=Markdown
+            --data-urlencode chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data-urlencode text="$MESSAGE" \
+            -d parse_mode=Markdown
 
       - name: Send Telegram Message on Failure
         if: ${{ failure() }}
         run: |
+          MESSAGE=$(cat <<EOF❌ *Build Failed* for \`${{ github.repository }}\`!🔗 [View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})📝 Output (last 20 lines):\`\`\`${{ env.BUILD_OUTPUT }}\`\`\`EOF)
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
-          --data-urlencode chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-          --data-urlencode text="❌ *Build Failed* for \`${{ github.repository }}\`!
-
-🔗 [View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-
-📝 Output (last 20 lines):
-\`\`\`
-${{ env.BUILD_OUTPUT }}
-\`\`\`" \
-          -d parse_mode=Markdown
+            --data-urlencode chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data-urlencode text="$MESSAGE" \
+            -d parse_mode=Markdown
