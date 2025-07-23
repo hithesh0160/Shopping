@@ -30,21 +30,21 @@ public class HtmlBodyExtractor {
         HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
         String contentType = response.headers().firstValue("Content-Type").orElse("unknown");
         String contentEncoding = response.headers().firstValue("Content-Encoding").orElse("none");
-        System.out.println("Content-Type: " + contentType);
-        System.out.println("Content-Encoding: " + contentEncoding);
+//        System.out.println("Content-Type: " + contentType);
+//        System.out.println("Content-Encoding: " + contentEncoding);
         byte[] bodyBytes = response.body();
         // Print first 200 bytes as hex for diagnostics
-        System.out.print("First 200 bytes (hex): ");
+//        System.out.print("First 200 bytes (hex): ");
         for (int i = 0; i < Math.min(200, bodyBytes.length); i++) {
-            System.out.printf("%02x ", bodyBytes[i]);
+//            System.out.printf("%02x ", bodyBytes[i]);
         }
-        System.out.println();
+//        System.out.println();
         // Try to extract charset from Content-Type
         String charset = "UTF-8";
         if (contentType.contains("charset=")) {
             charset = contentType.substring(contentType.indexOf("charset=") + 8).split("[;\"]")[0].trim();
         }
-        System.out.println("Detected charset: " + charset);
+//        System.out.println("Detected charset: " + charset);
         // Handle gzip decompression if needed
         if (contentEncoding.equalsIgnoreCase("gzip")) {
             try (GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(bodyBytes));
