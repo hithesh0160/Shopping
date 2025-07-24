@@ -24,6 +24,8 @@ public class HtmlBodyExtractor {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(url))
+            .header("Accept", "*/*")
+            .header("Connection", "keep-alive")
             .header("Accept-Encoding", "gzip, deflate")
             .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
             .GET()
@@ -33,6 +35,9 @@ public class HtmlBodyExtractor {
         String contentEncoding = response.headers().firstValue("Content-Encoding").orElse("none");
 //        System.out.println("Content-Type: " + contentType);
 //        System.out.println("Content-Encoding: " + contentEncoding);
+        System.out.println("Status Code: " + response.statusCode());
+        System.out.println("Headers: " + response.headers());
+        System.out.println("Body: " + response.body());
         byte[] bodyBytes = response.body();
         // Print first 200 bytes as hex for diagnostics
 //        System.out.print("First 200 bytes (hex): ");
