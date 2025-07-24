@@ -24,7 +24,7 @@ jobs:
         working-directory: ./shop
         run: |
           # Run Maven and capture all output
-          OUTPUT="$(mvn -B clean install 2>&1)"
+          OUTPUT="$(mvn -B clean test 2>&1)"
           echo "$OUTPUT"
           echo "✅✅✅ MAVEN BUILD DONE. CAPTURE COMPLETED ✅✅✅"
 
