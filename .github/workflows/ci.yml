@@ -1,7 +1,10 @@
 name: Shopping Maven CI
 
 on:
-  workflow_dispatch:
+  push:              # Runs automatically on code push
+    branches:
+      - main         # or any branches you want
+  workflow_dispatch: # Enables manual run via GitHub UI
 
 jobs:
   build:
@@ -16,10 +19,25 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Run Maven and capture output
+      - name: Run Maven and capture filtered output
         id: capture_output
         working-directory: ./shop
-        run: OUTPUT="$(mvn -B clean install 2>&1)" && echo "$OUTPUT" && echo "✅✅✅ MAVEN BUILD DONE. CAPTURE COMPLETED ✅✅✅" && TRUNCATED_OUTPUT="$(echo "$OUTPUT" | tail -n 20 | sed 's/`/\\`/g')" && echo "BUILD_OUTPUT<<EOF" >> $GITHUB_ENV && echo "$TRUNCATED_OUTPUT" >> $GITHUB_ENV && echo "EOF" >> $GITHUB_ENV
+        run: |
+          # Run Maven and capture all output
+          OUTPUT="$(mvn -B clean install 2>&1)"
+          echo "$OUTPUT"
+          echo "✅✅✅ MAVEN BUILD DONE. CAPTURE COMPLETED ✅✅✅"
+
+          # Extract everything after the marker line
+          FILTERED_OUTPUT="$(echo "$OUTPUT" | awk '/\[INFO\] Running TestSuite/ {found=1; next} found')"
+
+          # Take the last 20 lines, escape backticks for Telegram formatting
+          TRUNCATED_OUTPUT="$(echo "$FILTERED_OUTPUT" | tail -n 20 | sed 's/`/\\`/g')"
+
+          # Store in GitHub Actions env
+          echo "BUILD_OUTPUT<<EOF" >> $GITHUB_ENV
+          echo "$TRUNCATED_OUTPUT" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Send Telegram Message on Success
         if: ${{ success() }}

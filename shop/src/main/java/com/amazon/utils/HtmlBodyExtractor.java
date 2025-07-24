@@ -17,7 +17,7 @@ public class HtmlBodyExtractor {
         scanner.close();
 
         String htmlBody = getHtmlBodyFromUrl(url);
-        // System.out.println("\n--- Response Content ---\n" + htmlBody);
+        System.out.println("\n--- Response Content ---\n" + htmlBody);
     }
 
     public static String getHtmlBodyFromUrl(String url) throws Exception {
