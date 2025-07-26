@@ -27,10 +27,10 @@ public class ExtractDataFromResponse {
                     href = nameNode.getAttributes().getNamedItem("href").getTextContent();
                 }
                 String fullLink = href.isEmpty() ? "" : "https://amazon.in" + href;
-                System.out.println("Name: " + name);
-                System.out.println("Price: " + price);
-                System.out.println("Link: " + fullLink);
-                System.out.println("---");
+                // System.out.println("Name: " + name);
+                // System.out.println("Price: " + price);
+                // System.out.println("Link: " + fullLink);
+                // System.out.println("---");
             }
             if (count == 0) {
                 System.out.println("No entries found for the given XPaths.");

@@ -1,6 +1,8 @@
 package com.amazon.utils;
 
 import java.net.http.*;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
 import java.net.URI;
 import java.util.Scanner;
 import java.util.zip.GZIPInputStream;
@@ -21,7 +23,16 @@ public class HtmlBodyExtractor {
     }
 
     public static String getHtmlBodyFromUrl(String url) throws Exception {
-        HttpClient client = HttpClient.newHttpClient();
+        // Step 1: Setup cookie manager
+        CookieManager cookieManager = new CookieManager();
+        cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
+
+        // Step 2: Attach cookie manager to HttpClient
+        HttpClient client = HttpClient.newBuilder()
+            .cookieHandler(cookieManager)
+            .build();
+
+        // Step 3: Build the request
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(url))
             .header("Accept", "*/*")
@@ -29,28 +40,31 @@ public class HtmlBodyExtractor {
             .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
             .GET()
             .build();
+
+        // Step 4: Send request
         HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+
         String contentType = response.headers().firstValue("Content-Type").orElse("unknown");
         String contentEncoding = response.headers().firstValue("Content-Encoding").orElse("none");
-//        System.out.println("Content-Type: " + contentType);
-//        System.out.println("Content-Encoding: " + contentEncoding);
+
         System.out.println("Status Code: " + response.statusCode());
         System.out.println("Headers: " + response.headers());
-        System.out.println("Body: " + response.body());
+
         byte[] bodyBytes = response.body();
-        // Print first 200 bytes as hex for diagnostics
-//        System.out.print("First 200 bytes (hex): ");
+
+        // Debug: Print first 200 bytes in hex
         for (int i = 0; i < Math.min(200, bodyBytes.length); i++) {
-//            System.out.printf("%02x ", bodyBytes[i]);
+            // System.out.printf("%02x ", bodyBytes[i]);
         }
-//        System.out.println();
-        // Try to extract charset from Content-Type
+        System.out.println();
+
+        // Step 5: Detect charset
         String charset = "UTF-8";
         if (contentType.contains("charset=")) {
             charset = contentType.substring(contentType.indexOf("charset=") + 8).split("[;\"]")[0].trim();
         }
-//        System.out.println("Detected charset: " + charset);
-        // Handle gzip decompression if needed
+
+        // Step 6: Decode response body
         if (contentEncoding.equalsIgnoreCase("gzip")) {
             try (GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(bodyBytes));
                  InputStreamReader isr = new InputStreamReader(gis, charset);

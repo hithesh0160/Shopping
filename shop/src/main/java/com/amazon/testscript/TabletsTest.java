@@ -25,7 +25,7 @@ public class TabletsTest {
 //        System.out.println(htmlBody);
 
         // Print the extracted data
-        System.out.println("Locators: "+ AmazonLocators.productName +" price"+ AmazonLocators.productPrice );        
+        // System.out.println("Locators: "+ AmazonLocators.productName +" price"+ AmazonLocators.productPrice );        
 //        System.out.println("\n--- Extracted Data ---");
         ExtractDataFromResponse.extractData(htmlBody, AmazonLocators.productName, AmazonLocators.productPrice);
     }
@@ -44,11 +44,11 @@ public class TabletsTest {
 
         String htmlBody = HtmlBodyExtractor.getHtmlBodyFromUrl(url);
         System.out.println("\n--- htmlBody ---");
-        System.out.println(htmlBody);
+        // System.out.println(htmlBody);
 
         // Print the extracted data
         System.out.println("\n--- Extracted Data ---");
-        System.out.println("Locators: "+ AmazonLocators.productName +" price"+ AmazonLocators.productPrice );        
+        // System.out.println("Locators: "+ AmazonLocators.productName +" price"+ AmazonLocators.productPrice );        
         ExtractDataFromResponse.extractData(htmlBody, AmazonLocators.productName, AmazonLocators.productPrice);
     }
 }
