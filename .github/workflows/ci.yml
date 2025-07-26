@@ -23,8 +23,10 @@ jobs:
         id: capture_output
         working-directory: ./shop
         run: |
-          # Run Maven and capture all output
-          OUTPUT="$(mvn -B clean test 2>&1)"
+          # # Run Maven and capture all output
+          # OUTPUT="$(mvn -B clean test 2>&1)"
+          # Run Maven and tee output to a file (shows logs in Actions UI)
+          mvn -B clean test 2>&1 | tee maven.log
           echo "$OUTPUT"
           echo "✅✅✅ MAVEN BUILD DONE. CAPTURE COMPLETED ✅✅✅"
 
