@@ -29,8 +29,15 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      # - name: Run Maven and capture filtered output
+      #   id: capture_output
+      #   run: |
+      #     set -e
+      #     mvn -B clean test 2>&1 | tee maven.log > full_output.log
+
       - name: Run tests and capture logs
         id: run_tests
+        working-directory: ./shop
         run: |
           set +e
           mvn test | tee mvn_output.log
