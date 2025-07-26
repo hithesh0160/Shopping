@@ -39,7 +39,7 @@ public class TabletsUITest {
         Page page = browser.newPage();
         page.navigate(url);
         page.waitForLoadState();
-        Assert.assertTrue(page.url().contains("Amazon"), "URL does not contain 'tablets'")
+        Assert.assertTrue(page.url().contains("Amazon"), "URL does not contain 'tablets'");
         List<String> productNames = page.locator(AmazonLocators.productName).allTextContents();
         List<String> productPrices = page.locator(AmazonLocators.productPrice).allTextContents();
 
