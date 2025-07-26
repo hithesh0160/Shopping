@@ -12,6 +12,7 @@ import com.microsoft.playwright.Playwright;
 
 import java.util.List;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class TabletsUITest {
@@ -34,11 +35,11 @@ public class TabletsUITest {
         );
 
         Playwright playwright = Playwright.create();
-        Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
+        Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
         Page page = browser.newPage();
         page.navigate(url);
-       
         page.waitForLoadState();
+        Assert.assertTrue(page.url().contains("Amazon"), "URL does not contain 'tablets'")
         List<String> productNames = page.locator(AmazonLocators.productName).allTextContents();
         List<String> productPrices = page.locator(AmazonLocators.productPrice).allTextContents();
 
