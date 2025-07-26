@@ -1,10 +1,10 @@
 name: Shopping Maven CI
 
 on:
-  push:              # Runs automatically on code push
+  push:
     branches:
-      - main         # or any branches you want
-  workflow_dispatch: # Enables manual run via GitHub UI
+      - main
+  workflow_dispatch:
 
 jobs:
   build:
@@ -19,32 +19,56 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Install Linux Dependencies (for Playwright and browsers)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwoff1 libopus0 libwebp7 libwebpdemux2 libenchant1c2a \
+            libgudev-1.0-0 libsecret-1-0 libhyphen0 libxss1 \
+            libgtk-3-0 libxcomposite1 libxdamage1 libxrandr2 \
+            libasound2 libatk1.0-0 libcups2 libdbus-1-3 \
+            libgdk-pixbuf2.0-0 libnspr4 libnss3 libxshmfence1 \
+            libxtst6 libvpx7 libevent-2.1-7 libgles2 libx264-dev \
+            libflite1 libharfbuzz-icu0 libgstapp-1.0-0 \
+            libgstaudio-1.0-0 libgstvideo-1.0-0 libgstpbutils-1.0-0 \
+            libgsttag-1.0-0 libgstgl-1.0-0 libgstcodecparsers-1.0-0 \
+            libgstfft-1.0-0
+
+      - name: Install Playwright Browsers
+        working-directory: ./shop
+        run: mvn exec:java -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args="install"
+
       - name: Run Maven and capture filtered output
         id: capture_output
         working-directory: ./shop
         run: |
-          # # Run Maven and capture all output
-          # OUTPUT="$(mvn -B clean test 2>&1)"
-          # Run Maven and tee output to a file (shows logs in Actions UI)
-          mvn -B clean test 2>&1 | tee maven.log
-          echo "$OUTPUT"
-          echo "✅✅✅ MAVEN BUILD DONE. CAPTURE COMPLETED ✅✅✅"
+          set -e
+          mvn -B clean test 2>&1 | tee maven.log > full_output.log
 
-          # Extract everything after the marker line
-          FILTERED_OUTPUT="$(echo "$OUTPUT" | awk '/\[INFO\] Running TestSuite/ {found=1; next} found')"
+          # Extract relevant lines after a marker or fallback
+          FILTERED_OUTPUT="$(awk '/\[INFO\] Running TestSuite/ {found=1; next} found' full_output.log || tail -n 40 full_output.log)"
 
-          # Take the last 20 lines, escape backticks for Telegram formatting
+          # Last 20 lines with escaped backticks for Telegram formatting
           TRUNCATED_OUTPUT="$(echo "$FILTERED_OUTPUT" | tail -n 20 | sed 's/`/\\`/g')"
 
-          # Store in GitHub Actions env
           echo "BUILD_OUTPUT<<EOF" >> $GITHUB_ENV
           echo "$TRUNCATED_OUTPUT" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: Send Telegram Message on Success
         if: ${{ success() }}
-        run: MESSAGE="✅ *Build Success* for \`${{ github.repository }}\`!\n\n🔗 [View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n📝 Output (last 20 lines):\n\`\`\`\n${{ env.BUILD_OUTPUT }}\n\`\`\`" && curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" --data-urlencode chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data-urlencode text="$MESSAGE" -d parse_mode=Markdown
+        run: |
+          MESSAGE="✅ *Build Success* for \`${{ github.repository }}\`!\n\n🔗 [View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n📝 Output (last 20 lines):\n\`\`\`\n${{ env.BUILD_OUTPUT }}\n\`\`\`"
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
+            --data-urlencode chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data-urlencode text="$MESSAGE" \
+            -d parse_mode=Markdown
 
       - name: Send Telegram Message on Failure
         if: ${{ failure() }}
-        run: MESSAGE="❌ *Build Failed* for \`${{ github.repository }}\`!\n\n🔗 [View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n📝 Output (last 20 lines):\n\`\`\`\n${{ env.BUILD_OUTPUT }}\n\`\`\`" && curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" --data-urlencode chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data-urlencode text="$MESSAGE" -d parse_mode=Markdown
+        run: |
+          MESSAGE="❌ *Build Failed* for \`${{ github.repository }}\`!\n\n🔗 [View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n📝 Output (last 20 lines):\n\`\`\`\n${{ env.BUILD_OUTPUT }}\n\`\`\`"
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
+            --data-urlencode chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --data-urlencode text="$MESSAGE" \
+            -d parse_mode=Markdown
