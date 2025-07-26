@@ -1,15 +1,10 @@
 name: Shopping Maven CI
 
 on:
-  push:              # Runs on push to main branch
+  push:              # Runs automatically on code push
     branches:
-      - main
-  workflow_dispatch: # Allows manual trigger from GitHub UI
-    inputs:
-      custom_message:
-        description: 'Optional custom message for Telegram'
-        required: false
-        default: ''
+      - main         # or any branches you want
+  workflow_dispatch: # Enables manual run via GitHub UI
 
 jobs:
   build:
@@ -28,39 +23,26 @@ jobs:
         id: capture_output
         working-directory: ./shop
         run: |
+          # Run Maven and capture all output
           OUTPUT="$(mvn -B clean test 2>&1)"
           echo "$OUTPUT"
           echo "✅✅✅ MAVEN BUILD DONE. CAPTURE COMPLETED ✅✅✅"
 
-          # Extract output after test suite starts
+          # Extract everything after the marker line
           FILTERED_OUTPUT="$(echo "$OUTPUT" | awk '/\[INFO\] Running TestSuite/ {found=1; next} found')"
-          
-          # Truncate to last 20 lines
+
+          # Take the last 20 lines, escape backticks for Telegram formatting
           TRUNCATED_OUTPUT="$(echo "$FILTERED_OUTPUT" | tail -n 20 | sed 's/`/\\`/g')"
-          
+
+          # Store in GitHub Actions env
           echo "BUILD_OUTPUT<<EOF" >> $GITHUB_ENV
           echo "$TRUNCATED_OUTPUT" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: Send Telegram Message on Success
         if: ${{ success() }}
-        run: |
-          CUSTOM_MESSAGE="${{ github.event.inputs.custom_message }}"
-          if [[ -z "$CUSTOM_MESSAGE" ]]; then
-            MESSAGE="✅ *Build Success* for \`${{ github.repository }}\`!\n\n🔗 [View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n📝 Output (last 20 lines):\n\`\`\`\n${{ env.BUILD_OUTPUT }}\n\`\`\`"
-          else
-            MESSAGE="$CUSTOM_MESSAGE"
-          fi
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
-            --data-urlencode chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-            --data-urlencode text="$MESSAGE" \
-            -d parse_mode=Markdown
+        run: MESSAGE="✅ *Build Success* for \`${{ github.repository }}\`!\n\n🔗 [View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n📝 Output (last 20 lines):\n\`\`\`\n${{ env.BUILD_OUTPUT }}\n\`\`\`" && curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" --data-urlencode chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data-urlencode text="$MESSAGE" -d parse_mode=Markdown
 
       - name: Send Telegram Message on Failure
         if: ${{ failure() }}
-        run: |
-          MESSAGE="❌ *Build Failed* for \`${{ github.repository }}\`!\n\n🔗 [View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n📝 Output (last 20 lines):\n\`\`\`\n${{ env.BUILD_OUTPUT }}\n\`\`\`"
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
-            --data-urlencode chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-            --data-urlencode text="$MESSAGE" \
-            -d parse_mode=Markdown
+        run: MESSAGE="❌ *Build Failed* for \`${{ github.repository }}\`!\n\n🔗 [View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n📝 Output (last 20 lines):\n\`\`\`\n${{ env.BUILD_OUTPUT }}\n\`\`\`" && curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" --data-urlencode chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" --data-urlencode text="$MESSAGE" -d parse_mode=Markdown

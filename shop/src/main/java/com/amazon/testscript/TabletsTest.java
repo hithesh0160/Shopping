@@ -2,7 +2,7 @@ package com.amazon.testscript;
 
 import com.amazon.utils.HtmlBodyExtractor;
 import com.amazon.constants.AmazonConstants;
-import com.amazon.constants.AmazonLocators;
+import com.amazon.locators.AmazonLocators;
 import com.amazon.utils.ExtractDataFromResponse;
 import com.amazon.utils.UrlGenerator;
 import org.testng.annotations.Test;

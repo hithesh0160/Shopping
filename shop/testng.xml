@@ -3,7 +3,7 @@
     <test name="Shop Tests">
         <classes>
             <!-- List your test classes here -->
-            <class name="com.amazon.testscript.TabletsTest"/>
+            <class name="com.amazon.testscript.TabletsUITest"/>
         </classes>
     </test>
 </suite>
