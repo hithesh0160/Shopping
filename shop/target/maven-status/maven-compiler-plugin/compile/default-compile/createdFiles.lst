@@ -7,3 +7,4 @@ com\amazon\utils\HtmlBodyExtractor.class
 com\amazon\utils\PropertiesFileReader.class
 com\amazon\utils\BaseClass.class
 com\amazon\testscript\TabletsUITest.class
+com\amazon\utils\SendTelegram.class

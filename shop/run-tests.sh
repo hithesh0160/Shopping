@@ -1,22 +1,26 @@
 #!/bin/bash
 
-# Define working directory (modify if needed)
-WORKDIR="./shop"
+# === CONFIG ===
+PROJECT_DIR="./shop"
+LOG_FILE="$PROJECT_DIR/mvn_output.log"
+BOT_TOKEN="your_telegram_bot_token"
+CHAT_ID="your_telegram_chat_id"
 
-# Step 1: Run Maven tests and generate logs
-echo "🔁 Running Maven tests..."
-cd "$WORKDIR" || exit 1
-
+# === STEP 1: Run Tests and Save Log ===
+echo "🔧 Running Maven tests locally..."
+cd "$PROJECT_DIR" || exit 1
 mvn clean test | tee mvn_output.log
+cd - || exit 1
 
-# Step 2: Extract last 20 lines
-tail -n 20 mvn_output.log > last_20.log
-cd ..
+# === STEP 2: Compile & Run Java Telegram Sender ===
+echo "📤 Sending test logs to Telegram..."
+javac SendTelegram.java || { echo "❌ Compilation failed!"; exit 1; }
+java SendTelegram "$LOG_FILE" "$BOT_TOKEN" "$CHAT_ID"
 
-# Step 3: Git add, commit and push
-echo "📤 Pushing test logs to GitHub..."
-git add "$WORKDIR/mvn_output.log" "$WORKDIR/last_20.log"
-git commit -m "chore: add local test logs for GitHub Actions"
+# === STEP 3: Prepare Git Push ===
+echo "📦 Preparing to push logs to GitHub..."
+git add "$LOG_FILE"
+git commit -m "🧪 Add test log for GitHub Actions Telegram notify"
 git push origin main
 
-echo "✅ Done! GitHub Actions will now send logs to Telegram (if configured)."
+echo "✅ Done! Message sent locally and GitHub workflow triggered."
