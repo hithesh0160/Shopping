@@ -11,11 +11,6 @@ import com.amazon.utils.BaseClass;
 
 public class TabletsUITest extends BaseClass {
     
-    // public static void main(String[] args) throws Exception {
-    //    TabletsUITest test = new TabletsUITest();
-    //    test.testExtractTabletData();
-    // }
-
     @Test
     public void testExtractTabletData() throws Exception {
         List<WebElement> productName = driver.findElements(By.xpath(AmazonLocators.productName));
