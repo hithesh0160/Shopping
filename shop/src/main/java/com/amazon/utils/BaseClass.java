@@ -66,7 +66,7 @@ public class BaseClass {
 		driver.get(url);
 		System.out.println("Title: "+ driver.getCurrentUrl());
 
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(60));
 		wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(AmazonLocators.productName)));
     }
 
