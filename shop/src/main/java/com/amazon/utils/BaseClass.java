@@ -52,7 +52,7 @@ public class BaseClass {
     }
 
     @BeforeMethod
-    public void setUpMethod() {
+    public void setUpMethod() throws InterruptedException {
         // Add method-level setup code here
         String url = UrlGenerator.generateUrlWithParams(
                 "tablets", // k
@@ -66,8 +66,10 @@ public class BaseClass {
 		driver.get(url);
 		System.out.println("Title: "+ driver.getCurrentUrl());
 
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(60));
-		wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(AmazonLocators.productName)));
+        // WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(60));
+		// wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(AmazonLocators.productName)));
+        Thread.sleep(75000); // Adjust sleep time as necessary
+		// wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(AmazonLocators.productName)));
     }
 
     @AfterMethod
