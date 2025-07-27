@@ -40,7 +40,7 @@ jobs:
         working-directory: ./shop
         run: |
           set +e
-          mvn test | tee mvn_output.log
+          xvfb-run --auto-servernum mvn clean test | tee mvn_output.log
           echo "EXIT_CODE=${PIPESTATUS[0]}" >> $GITHUB_ENV
           tail -n 20 mvn_output.log > last_20.log
           set -e
