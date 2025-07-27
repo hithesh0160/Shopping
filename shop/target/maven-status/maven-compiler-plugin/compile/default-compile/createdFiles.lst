@@ -5,5 +5,3 @@ com\amazon\utils\UrlGenerator.class
 com\amazon\testscript\TabletsTest.class
 com\amazon\utils\HtmlBodyExtractor.class
 com\amazon\utils\PropertiesFileReader.class
-com\amazon\utils\BaseClass.class
-com\amazon\testscript\TabletsUITest.class
