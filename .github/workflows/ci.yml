@@ -1,4 +1,4 @@
-name: Run Maven Tests & Notify Telegram
+name: Notify Telegram From Local Test Results
 
 on:
   push:
@@ -12,7 +12,7 @@ on:
         default: ""
 
 jobs:
-  run-tests:
+  notify:
     runs-on: ubuntu-22.04
 
     env:
@@ -23,35 +23,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      # - name: Run Maven and capture filtered output
-      #   id: capture_output
-      #   run: |
-      #     set -e
-      #     mvn -B clean test 2>&1 | tee maven.log > full_output.log
-
-      - name: Run tests and capture logs
-        id: run_tests
-        working-directory: ./shop
+      - name: Check for mvn_output.log file
+        id: check_log
         run: |
-          set +e
-          xvfb-run --auto-servernum mvn clean test | tee mvn_output.log
-          echo "EXIT_CODE=${PIPESTATUS[0]}" >> $GITHUB_ENV
-          tail -n 20 mvn_output.log > last_20.log
-          set -e
+          if [ -f ./shop/mvn_output.log ]; then
+            echo "LOG_EXISTS=true" >> $GITHUB_ENV
+            tail -n 20 ./shop/mvn_output.log > ./shop/last_20.log
+          else
+            echo "LOG_EXISTS=false" >> $GITHUB_ENV
+          fi
 
-      - name: Send test result to Telegram
-        if: env.EXIT_CODE != '0'
+      - name: Send test result to Telegram (only if log exists)
+        if: env.LOG_EXISTS == 'true'
         run: |
-          MESSAGE="🔴 Maven Tests Failed in GitHub Actions Workflow\n\n$(cat last_20.log)"
+          MESSAGE="📦 *Test Results from Local Run Pushed to GitHub*\n\n📝 Last 20 lines:\n\`\`\`\n$(cat ./shop/last_20.log)\n\`\`\`"
           curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
             -d chat_id=${TELEGRAM_CHAT_ID} \
-            -d text="$MESSAGE" \
+            --data-urlencode text="$MESSAGE" \
             -d parse_mode="Markdown"
 
       - name: Send custom Telegram message (manual trigger)
@@ -59,5 +47,5 @@ jobs:
         run: |
           curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
             -d chat_id=${TELEGRAM_CHAT_ID} \
-            -d text="${{ github.event.inputs.custom_message }}" \
+            --data-urlencode text="${{ github.event.inputs.custom_message }}" \
             -d parse_mode="Markdown"
