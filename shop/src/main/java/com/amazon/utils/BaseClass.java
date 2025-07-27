@@ -74,6 +74,8 @@ public class BaseClass {
         new WebDriverWait(driver, Duration.ofSeconds(60)).until(webDriver -> ((JavascriptExecutor) webDriver)
         .executeScript("return document.readyState").equals("complete"));
 
+        System.out.println("Title: "+ driver.getTitle());
+        
         // WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(300));
 		// wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(AmazonLocators.productName)));
         // Thread.sleep(75000); // Adjust sleep time as necessary
