@@ -1,6 +1,6 @@
-package com.amazon.locators;
+package locators;
 
-public class AmazonLocators {
+public class InstamartLocators {
 
     // Product Name Locator
     public static final String productName = "//a[@class='a-link-normal s-line-clamp-2 s-line-clamp-3-for-col-12 s-link-style a-text-normal']";

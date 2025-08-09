@@ -1,10 +1,12 @@
 package com.amazon.testscript;
 
-import com.amazon.utils.HtmlBodyExtractor;
 import com.amazon.constants.AmazonConstants;
-import com.amazon.locators.AmazonLocators;
 import com.amazon.utils.ExtractDataFromResponse;
+import com.amazon.utils.HtmlBodyExtractor;
 import com.amazon.utils.UrlGenerator;
+
+import locators.AmazonLocators;
+
 import org.testng.annotations.Test;
 
 public class TabletsTest {

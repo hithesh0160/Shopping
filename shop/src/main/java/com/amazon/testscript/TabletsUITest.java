@@ -6,8 +6,9 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.testng.annotations.Test;
 
-import com.amazon.locators.AmazonLocators;
 import com.amazon.utils.BaseClass;
+
+import locators.AmazonLocators;
 
 public class TabletsUITest extends BaseClass {
     

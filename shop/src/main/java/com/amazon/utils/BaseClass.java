@@ -10,7 +10,8 @@ import java.time.Duration;
 import java.util.List;
 
 import com.amazon.constants.AmazonConstants;
-import com.amazon.locators.AmazonLocators;
+
+import locators.AmazonLocators;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
