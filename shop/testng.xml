@@ -3,7 +3,8 @@
     <test name="Shop Tests">
         <classes>
             <!-- List your test classes here -->
-            <class name="com.amazon.testscript.TabletsUITest"/>
+            <!-- <class name="com.amazon.testscript.TabletsUITest"/> -->
+            <class name="com.instamart.testscript.SmartphonesTest"/>
         </classes>
     </test>
 </suite>
