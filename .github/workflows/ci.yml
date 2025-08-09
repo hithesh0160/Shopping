@@ -1,4 +1,4 @@
-name: Notify Telegram From Local Test Results
+name: Notify Telegram Test Results
 
 on:
   push:
@@ -23,20 +23,39 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build and run tests
+        run: |
+          cd shop
+          mvn clean test | tee mvn_output.log
+
       - name: Check for mvn_output.log file
         id: check_log
         run: |
           if [ -f ./shop/mvn_output.log ]; then
-            echo "LOG_EXISTS=true" >> $GITHUB_ENV
+            echo "log_exists=true" >> $GITHUB_OUTPUT
             tail -n 20 ./shop/mvn_output.log > ./shop/last_20.log
           else
-            echo "LOG_EXISTS=false" >> $GITHUB_ENV
+            echo "log_exists=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Send test result to Telegram (only if log exists)
-        if: env.LOG_EXISTS == 'true'
+        if: steps.check_log.outputs.log_exists == 'true'
         run: |
-          MESSAGE="📦 *Test Results from Local Run Pushed to GitHub*\n\n📝 Last 20 lines:\n\`\`\`\n$(cat ./shop/last_20.log)\n\`\`\`"
+          MESSAGE="📦 *Test Results from GitHub Actions*\n\n📝 Last 20 lines:\n\`\`\`\n$(cat ./shop/last_20.log)\n\`\`\`"
           curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
             -d chat_id=${TELEGRAM_CHAT_ID} \
             --data-urlencode text="$MESSAGE" \
