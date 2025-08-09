@@ -40,7 +40,7 @@ jobs:
       - name: Build and run tests
         run: |
           cd shop
-          mvn clean test | tee mvn_output.log
+          mvn clean test -Dsurefire.printSummary=true -Dsurefire.useFile=false | tee mvn_output.log
 
       - name: Check for mvn_output.log file
         id: check_log
