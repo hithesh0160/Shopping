@@ -3,6 +3,7 @@ package com.instamart.testscript;
 import java.util.List;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.testng.annotations.Test;
@@ -25,22 +26,31 @@ public class SmartphonesTest extends BaseClass {
         driver.findElement(By.xpath(InstamartLocators.searchBox2)).sendKeys(name);
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.searchResult)));
         driver.findElement(By.xpath(InstamartLocators.searchResult)).click();
-        // wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.sortByButton)));
-        // driver.findElement(By.xpath(InstamartLocators.sortByButton)).click();
-        // wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.sortByDiscountOption)));
-        // driver.findElement(By.xpath(InstamartLocators.sortByDiscountOption)).click();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.gotItButton)));
+        driver.findElement(By.xpath(InstamartLocators.gotItButton)).click();
+        WebElement scrollableDiv = driver.findElement(By.xpath(InstamartLocators.sortByButton));
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        js.executeScript("arguments[0].scrollTop = arguments[0].scrollHeight;", scrollableDiv);
+        driver.findElement(By.xpath(InstamartLocators.sortByButton)).click();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.sortByDiscountOption)));
+        driver.findElement(By.xpath(InstamartLocators.sortByDiscountOption)).click();
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.productName)));
         System.out.println("Product Details:");
         List<WebElement> productName = driver.findElements(By.xpath(InstamartLocators.productName));
         List<WebElement> productPrice = driver.findElements(By.xpath(InstamartLocators.productPrice));
         List<WebElement> productDiscount = driver.findElements(By.xpath(InstamartLocators.productDiscountPercentage));
 
-        for (int i = 0; i < productName.size(); i++) {
+        try {
+            for (int i = 0; i < productName.size(); i++) {
             String nameText = productName.get(i).getText();
-            String priceText = (i < productPrice.size()) ? productPrice.get(i).getText() : "N/A";
-            String discountText = (i < productDiscount.size()) ? productDiscount.get(i).getText() : "N/A";
+            String priceText = productPrice.get(i).getText();
+            String discountText = productDiscount.get(i).getText();
             System.out.println("Product: " + nameText + ", Price: " + priceText + ", Discount: " + discountText);
             System.out.println(" ");
         }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+ 
 }
 }

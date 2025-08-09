@@ -56,7 +56,7 @@ public class BaseClass {
     @AfterClass
     public void tearDownClass() {
         // Add class-level teardown code here
-        // driver.close();
+        driver.close();
     }
 
     @BeforeMethod

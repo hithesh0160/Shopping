@@ -21,15 +21,18 @@ public class InstamartLocators {
     public static final String searchResult = "//div[@class='HoLNY']";
 
     // Sort By Locators
-    public static final String sortByButton = "//div[@class='sc-fBWQRz gashTL']//div[text()='Sort By']";
+    public static final String sortByButton = "//div[text()='Sort By']";
     public static final String sortByDiscountOption = "//label[text()='Discount (High To Low)']";
 
     // Product Name Locator
     public static final String productName = "//div[@class='sc-aXZVg kyEzVU _1sPB0']";
 
     // Product Price Locator
-    public static final String productPrice = "//div[@class='_1AaZg']//span[@class='_1fQZEK']//div[@class='sc-aXZVg jLtxeJ _1bWTz']";
+    public static final String productPrice = "//div[@class='sc-aXZVg jLtxeJ _1bWTz']";
 
     // Product Discount Percentage Locator
     public static final String productDiscountPercentage = "//div[@class='sc-aXZVg cNzAGo']";
+
+    //Got it Button Locator
+    public static final String gotItButton = "(//div[@class='sc-aXZVg fKRLbH _3j4df'])[2]";
 }

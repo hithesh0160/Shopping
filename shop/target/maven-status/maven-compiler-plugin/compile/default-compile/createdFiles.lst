@@ -7,7 +7,6 @@ com\amazon\testscript\TabletsTest.class
 com\amazon\utils\HtmlBodyExtractor.class
 com\instamart\utils\BaseClass.class
 com\amazon\utils\BaseClass.class
-com\instamart\utils\SendTelegram.class
 com\amazon\utils\UrlGenerator.class
 com\amazon\utils\PropertiesFileReader.class
 com\amazon\testscript\TabletsUITest.class
