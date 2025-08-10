@@ -37,6 +37,9 @@ public class InstamartLocators {
     //Got it Button Locator
     public static final String gotItButton = "(//div[@class='sc-aXZVg fKRLbH _3j4df'])[2]";
 
-    // Product Previous Price Locator
+    // Sort Locators
     public static final String smartphonesSortButton = "//div[text()='Smartphones']";
+    public static final String sortByTypeButton = "//div[text()='Type']";
+    public static final String pcAndAccessoriesSortButton = "//label[text()='PC and Accessories']";
+    public static final String applyFiltersButton = "//div[text()='Apply Filters']";
 }

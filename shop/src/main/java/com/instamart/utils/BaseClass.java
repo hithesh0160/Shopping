@@ -1,31 +1,20 @@
 package com.instamart.utils;
 
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.List;
 
-import com.amazon.constants.AmazonConstants;
-
-import locators.AmazonLocators;
-import locators.InstamartLocators;
-
-import org.openqa.selenium.By;
-import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
 public class BaseClass {
 
@@ -72,7 +61,6 @@ public class BaseClass {
 
         System.out.println("Title: " + driver.getTitle());
         // setKodathiLocationAddress();
-
     }
 
     @AfterMethod
@@ -80,15 +68,4 @@ public class BaseClass {
         // Add method-level teardown code here
     }
 
-    public void setKodathiLocationAddress() throws InterruptedException {
-        // driver.findElement(By.xpath(InstamartLocators.addressButton)).click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.addressTextField)));        
-        driver.findElement(By.xpath(InstamartLocators.addressTextField)).click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.addressTextField2)));
-        driver.findElement(By.xpath(InstamartLocators.addressTextField2)).sendKeys("Subhan Nilaya");
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.kodathiSearchResult)));
-        driver.findElement(By.xpath(InstamartLocators.kodathiSearchResult)).click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.addressConfirmButton)));
-        driver.findElement(By.xpath(InstamartLocators.addressConfirmButton)).click();
-    }
 }

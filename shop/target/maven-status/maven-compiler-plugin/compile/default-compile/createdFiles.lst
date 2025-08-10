@@ -2,7 +2,6 @@ locators\InstamartLocators.class
 locators\AmazonLocators.class
 com\amazon\utils\ExtractDataFromResponse.class
 com\amazon\constants\AmazonConstants.class
-com\instamart\testscript\SmartphonesTest.class
 com\amazon\testscript\TabletsTest.class
 com\amazon\utils\HtmlBodyExtractor.class
 com\instamart\utils\BaseClass.class

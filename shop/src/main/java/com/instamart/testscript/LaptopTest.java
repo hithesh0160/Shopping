@@ -11,16 +11,16 @@ import com.instamart.utils.InstamartUtil;
 
 import locators.InstamartLocators;
 
-public class SmartphonesTest extends BaseClass {
+public class LaptopTest extends BaseClass {
 
     @Test
-    public void testSmartphones() throws Exception {
-        InstamartUtil.testSearchProduct("Smartphone");
-        sortSmartphonesOnUI();
+    public void testLaptops() throws Exception {
+        InstamartUtil.testSearchProduct("Laptop");
+        sortLaptopsOnUI();
         InstamartUtil.sortElementsByDiscount();
     }
 
-    private void sortSmartphonesOnUI() throws Exception {
+    private void sortLaptopsOnUI() throws Exception {
     WebElement element = driver.findElement(By.xpath(InstamartLocators.sortByButton));
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", element);
         Thread.sleep(500);
@@ -28,8 +28,14 @@ public class SmartphonesTest extends BaseClass {
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.sortByDiscountOption)));
         driver.findElement(By.xpath(InstamartLocators.sortByDiscountOption)).click();
         Thread.sleep(500);
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.smartphonesSortButton)));
-        driver.findElement(By.xpath(InstamartLocators.smartphonesSortButton)).click();
+    WebElement element2 = driver.findElement(By.xpath(InstamartLocators.sortByTypeButton));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", element2);
+        Thread.sleep(500);
+        element2.click();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.pcAndAccessoriesSortButton)));
+        driver.findElement(By.xpath(InstamartLocators.pcAndAccessoriesSortButton)).click();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.applyFiltersButton)));
+        driver.findElement(By.xpath(InstamartLocators.applyFiltersButton)).click();
         Thread.sleep(500);
     }
 }

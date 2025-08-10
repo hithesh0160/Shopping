@@ -2,9 +2,8 @@
 <suite name="Shop Suite">
     <test name="Shop Tests">
         <classes>
-            <!-- List your test classes here -->
-            <!-- <class name="com.amazon.testscript.TabletsUITest"/> -->
             <class name="com.instamart.testscript.SmartphonesTest"/>
+            <class name="com.instamart.testscript.LaptopTest"/>
         </classes>
     </test>
 </suite>
