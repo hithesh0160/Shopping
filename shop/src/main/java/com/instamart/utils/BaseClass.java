@@ -29,6 +29,10 @@ public class BaseClass {
         options.addArguments("--window-size=1920,1080");
         options.addArguments("--no-sandbox");
         options.addArguments("--headless");
+        options.addArguments("--disable-cache");
+        options.addArguments("--disk-cache-size=0");
+        options.addArguments("--media-cache-size=0");
+        options.addArguments("--incognito");
         options.addArguments("--disable-dev-shm-usage");
         options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
                 "AppleWebKit/537.36 (KHTML, like Gecko) " +
@@ -53,7 +57,8 @@ public class BaseClass {
     @BeforeMethod
     public void setUpMethod() throws InterruptedException {
 
-        driver.get("https://www.swiggy.com/instamart/city/bangalore");
+        String url = "https://www.swiggy.com/instamart/city/bangalore";
+        driver.get(url + "?t=" + System.currentTimeMillis());
 
         wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         wait.until(webDriver -> ((JavascriptExecutor) webDriver)
