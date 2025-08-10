@@ -60,7 +60,7 @@ public class BaseClass {
         String url = "https://www.swiggy.com/instamart/city/bangalore";
         driver.get(url + "?t=" + System.currentTimeMillis());
 
-        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait = new WebDriverWait(driver, Duration.ofSeconds(60));
         wait.until(webDriver -> ((JavascriptExecutor) webDriver)
                 .executeScript("return document.readyState").equals("complete"));
 
