@@ -29,10 +29,14 @@ public class InstamartLocators {
 
     // Product Price Locator
     public static final String productPrice = "//div[@class='sc-aXZVg jLtxeJ _1bWTz']";
+    public static final String previousPrice = "//div[@class='sc-aXZVg doVisW _2KTMQ']";
 
     // Product Discount Percentage Locator
     public static final String productDiscountPercentage = "//div[@class='sc-aXZVg cNzAGo']";
 
     //Got it Button Locator
     public static final String gotItButton = "(//div[@class='sc-aXZVg fKRLbH _3j4df'])[2]";
+
+    // Product Previous Price Locator
+    public static final String smartphonesSortButton = "//div[text()='Smartphones']";
 }
