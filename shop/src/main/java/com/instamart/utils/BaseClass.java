@@ -51,6 +51,8 @@ public class BaseClass {
         options.addArguments("--user-data-dir=" + userDataDir.toString());
 
         driver = new ChromeDriver(options);
+        driver.manage().deleteAllCookies();
+        driver.manage().window().maximize();
     }
 
     @AfterClass
@@ -64,7 +66,7 @@ public class BaseClass {
 
         driver.get("https://www.swiggy.com/instamart/city/bangalore");
 
-        wait = new WebDriverWait(driver, Duration.ofSeconds(60));
+        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         wait.until(webDriver -> ((JavascriptExecutor) webDriver)
                 .executeScript("return document.readyState").equals("complete"));
 

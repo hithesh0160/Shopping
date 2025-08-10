@@ -33,30 +33,46 @@ public class SmartphonesTest extends BaseClass {
         }
     }
 
-    @Test
+    @Test(priority = 1)
     public void testSmartphones() throws Exception {
-        testSearchProduct("Smartphone", "Discount");
+        testSearchProduct("Smartphone");
+        sortSmartphonesOnUI();
+        sortElementsByDiscount();
     }
 
-    public void testSearchProduct(String name, String sortBy) throws Exception {
+    @Test(priority = 2)
+    public void testVegetables() throws Exception {
+        testSearchProduct("Vegetable");
+        // sortVegetablesOnUI();
+        sortElementsByDiscount();
+    }
+
+    public void testSearchProduct(String name) throws Exception {
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.searchBox)));
         driver.findElement(By.xpath(InstamartLocators.searchBox)).click();
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.searchBox2)));
         driver.findElement(By.xpath(InstamartLocators.searchBox2)).sendKeys(name);
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.searchResult)));
         driver.findElement(By.xpath(InstamartLocators.searchResult)).click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.gotItButton)));
+        Thread.sleep(500);
+        // wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.gotItButton)));
         driver.findElement(By.xpath(InstamartLocators.gotItButton)).click();
-        WebElement element = driver.findElement(By.xpath(InstamartLocators.sortByButton));
+    }
+
+    public void sortSmartphonesOnUI() throws Exception {
+    WebElement element = driver.findElement(By.xpath(InstamartLocators.sortByButton));
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", element);
         Thread.sleep(500);
         element.click();
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.sortByDiscountOption)));
         driver.findElement(By.xpath(InstamartLocators.sortByDiscountOption)).click();
+        Thread.sleep(500);
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.smartphonesSortButton)));
         driver.findElement(By.xpath(InstamartLocators.smartphonesSortButton)).click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.productName)));
+        Thread.sleep(500);
+    }
 
+    public void sortElementsByDiscount() {
         System.out.println("Product Details:");
 
         List<WebElement> productName = driver.findElements(By.xpath(InstamartLocators.productName));
