@@ -16,7 +16,7 @@ public class SmartphonesTest extends BaseClass {
     
     @Test
     public void testSmartphones() throws Exception{
-        testSearchProduct("Smartphones", "Discount");
+        testSearchProduct("Smartphone", "Discount");
     }
 
     public void testSearchProduct(String name,String sortBy) throws Exception {
@@ -28,10 +28,11 @@ public class SmartphonesTest extends BaseClass {
         driver.findElement(By.xpath(InstamartLocators.searchResult)).click();
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.gotItButton)));
         driver.findElement(By.xpath(InstamartLocators.gotItButton)).click();
-        WebElement scrollableDiv = driver.findElement(By.xpath(InstamartLocators.sortByButton));
-        JavascriptExecutor js = (JavascriptExecutor) driver;
-        js.executeScript("arguments[0].scrollTop = arguments[0].scrollHeight;", scrollableDiv);
-        driver.findElement(By.xpath(InstamartLocators.sortByButton)).click();
+        WebElement element = driver.findElement(By.xpath(InstamartLocators.sortByButton));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", element);
+        Thread.sleep(500); // Optional but can help with timing issues
+        // wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.sortByButton)));
+        element.click();
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.sortByDiscountOption)));
         driver.findElement(By.xpath(InstamartLocators.sortByDiscountOption)).click();
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.productName)));
@@ -49,7 +50,7 @@ public class SmartphonesTest extends BaseClass {
             System.out.println(" ");
         }
         } catch (Exception e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         }
  
 }

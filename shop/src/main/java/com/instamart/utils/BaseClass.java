@@ -39,7 +39,7 @@ public class BaseClass {
         options = new ChromeOptions();
         options.addArguments("--window-size=1920,1080");
         options.addArguments("--no-sandbox");
-        options.addArguments("--headless");
+        // options.addArguments("--headless");
         options.addArguments("--disable-dev-shm-usage");
         options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
                 "AppleWebKit/537.36 (KHTML, like Gecko) " +
@@ -62,14 +62,14 @@ public class BaseClass {
     @BeforeMethod
     public void setUpMethod() throws InterruptedException {
 
-        driver.get("https://www.swiggy.com/instamart");
+        driver.get("https://www.swiggy.com/instamart/city/bangalore");
 
         wait = new WebDriverWait(driver, Duration.ofSeconds(60));
         wait.until(webDriver -> ((JavascriptExecutor) webDriver)
                 .executeScript("return document.readyState").equals("complete"));
 
         System.out.println("Title: " + driver.getTitle());
-        setKodathiLocationAddress();
+        // setKodathiLocationAddress();
 
     }
 
