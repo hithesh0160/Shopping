@@ -44,29 +44,38 @@ jobs:
           cd shop
           mvn clean test -Dsurefire.printSummary=true -Dsurefire.useFile=false | tee mvn_output.log
 
-      - name: Extract Product Details section
-        id: extract_section
+      - name: Extract each Product Details section
+        id: extract_sections
         run: |
-          if grep -q "Product Details:" ./shop/mvn_output.log; then
-            sed -n '/Product Details:/,/^\[INFO\] Tests run:/p' ./shop/mvn_output.log \
-              | sed '$d' > ./shop/product_details.log
-            echo "section_exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "section_exists=false" >> $GITHUB_OUTPUT
-          fi
+          cd shop
+          rm -f product_details_*.log
+          COUNT=0
+          # Loop through each "Product Details:" occurrence
+          grep -n "Product Details:" mvn_output.log | cut -d: -f1 | while read -r START; do
+            END=$(tail -n +$START mvn_output.log | grep -n "^\[INFO\] Tests run:" | head -n1 | cut -d: -f1)
+            if [ -n "$END" ]; then
+              END=$((START + END - 2))
+              sed -n "${START},${END}p" mvn_output.log > "product_details_${COUNT}.log"
+              COUNT=$((COUNT + 1))
+            fi
+          done
+          echo "count=$COUNT" >> $GITHUB_OUTPUT
 
       - name: Send Product Details to Telegram
-        if: steps.extract_section.outputs.section_exists == 'true'
+        if: steps.extract_sections.outputs.count != '0'
         run: |
+          cd shop
           MAX_LEN=4000
-          CONTENT=$(cat ./shop/product_details.log)
-          while [ ${#CONTENT} -gt 0 ]; do
-            PART="${CONTENT:0:$MAX_LEN}"
-            curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
-              -d chat_id=${TELEGRAM_CHAT_ID} \
-              --data-urlencode text="$PART" \
-              -d parse_mode="Markdown"
-            CONTENT="${CONTENT:$MAX_LEN}"
+          for FILE in product_details_*.log; do
+            CONTENT=$(cat "$FILE")
+            while [ ${#CONTENT} -gt 0 ]; do
+              PART="${CONTENT:0:$MAX_LEN}"
+              curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
+                -d chat_id=${TELEGRAM_CHAT_ID} \
+                --data-urlencode text="$PART" \
+                -d parse_mode="Markdown"
+              CONTENT="${CONTENT:$MAX_LEN}"
+            done
           done
 
       - name: Send custom Telegram message (manual trigger)
