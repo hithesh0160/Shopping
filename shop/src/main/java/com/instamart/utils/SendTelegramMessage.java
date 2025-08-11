@@ -1,17 +1,13 @@
 package com.instamart.utils;
 
-import java.io.*;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.nio.file.*;
-import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.stream.Collectors;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.w3c.dom.*;
 
 public class SendTelegramMessage {
 
@@ -24,76 +20,48 @@ public class SendTelegramMessage {
             return;
         }
 
-        StringBuilder reportSummary = new StringBuilder();
-
-        // Path to TestNG testng-results.xml
-        Path testngResults = Paths.get("shop", "test-output", "testng-results.xml");
-        if (Files.exists(testngResults)) {
-            try {
-                DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-                DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-                Document doc = dBuilder.parse(testngResults.toFile());
-                doc.getDocumentElement().normalize();
-
-                Element root = doc.getDocumentElement();
-                String total = root.getAttribute("total");
-                String passed = root.getAttribute("passed");
-                String failed = root.getAttribute("failed");
-                String skipped = root.getAttribute("skipped");
-
-                reportSummary.append(String.format(
-                        "TestNG Results -> Total: %s, Passed: %s, Failed: %s, Skipped: %s%n",
-                        total, passed, failed, skipped
-                ));
-            } catch (Exception e) {
-                System.err.println("Error parsing testng-results.xml");
-                e.printStackTrace();
-            }
+        // Surefire report directory
+        Path reportsDir = Paths.get("shop", "test-output", "junitreports");
+        if (!Files.exists(reportsDir)) {
+            System.err.println("Surefire reports directory not found: " + reportsDir.toAbsolutePath());
+            return;
         }
 
-        // Parse JUnit-style XML reports from TestNG (shop/test-output/junitreports)
-        Path junitReportsDir = Paths.get("shop", "test-output", "junitreports");
-        if (Files.exists(junitReportsDir)) {
-            try {
-                List<Path> xmlReports = Files.walk(junitReportsDir)
-                        .filter(p -> p.toString().endsWith(".xml"))
-                        .collect(Collectors.toList());
+        StringBuilder extractedContent = new StringBuilder();
 
-                for (Path xmlFile : xmlReports) {
-                    try {
-                        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-                        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-                        Document doc = dBuilder.parse(xmlFile.toFile());
-                        doc.getDocumentElement().normalize();
-
-                        Element root = doc.getDocumentElement();
-                        if (root.getTagName().equals("testsuite")) {
-                            String name = root.getAttribute("name");
-                            String tests = root.getAttribute("tests");
-                            String failures = root.getAttribute("failures");
-                            String errors = root.getAttribute("errors");
-                            String skipped = root.getAttribute("skipped");
-
-                            reportSummary.append(String.format(
-                                    "%s -> Tests run: %s, Failures: %s, Errors: %s, Skipped: %s%n",
-                                    name, tests, failures, errors, skipped
-                            ));
+        try {
+            // Read all .txt reports
+            String allReports = Files.walk(reportsDir)
+                    .filter(p -> p.toString().endsWith(".txt"))
+                    .map(p -> {
+                        try {
+                            return Files.readAllLines(p).stream().collect(Collectors.joining("\n"));
+                        } catch (IOException e) {
+                            return "";
                         }
-                    } catch (Exception e) {
-                        System.err.println("Error parsing JUnit XML: " + xmlFile);
-                        e.printStackTrace();
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+                    })
+                    .collect(Collectors.joining("\n\n"));
+
+            // Extract between markers
+            String startMarker = "Product Details:";
+            String endMarker = "[INFO] Tests run:";
+
+            int startIndex = allReports.indexOf(startMarker);
+            int endIndex = allReports.indexOf(endMarker, startIndex);
+
+            if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+                String between = allReports.substring(startIndex + startMarker.length(), endIndex).trim();
+                extractedContent.append(between);
+            } else {
+                extractedContent.append("No matching content found between the specified markers.");
             }
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        if (reportSummary.length() == 0) {
-            reportSummary.append("No test summary found in reports.");
-        }
-
-        sendTelegramMessage(botToken, chatId, reportSummary.toString().trim());
+        // Send message to Telegram
+        sendTelegramMessage(botToken, chatId, extractedContent.toString());
     }
 
     private static void sendTelegramMessage(String botToken, String chatId, String text) throws Exception {
@@ -107,3 +75,4 @@ public class SendTelegramMessage {
         System.out.println("Telegram API Response Code: " + responseCode);
     }
 }
+
