@@ -37,7 +37,6 @@ jobs:
         if: always()
         run: |
           mkdir -p build
-          ls -R
           javac -d build shop/src/main/java/com/instamart/utils/SendTelegramMessage.java
           java -cp build com.instamart.utils.SendTelegramMessage
 
