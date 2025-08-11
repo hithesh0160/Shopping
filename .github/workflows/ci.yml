@@ -28,10 +28,14 @@ jobs:
       - name: Build Docker image
         run: docker build -t selenium-tests -f shop/Dockerfile shop
 
-      - name: Run tests inside Docker
+      - name: Run tests inside Docker and save output
         run: |
           mkdir -p target/surefire-reports
-          docker run --rm selenium-tests || true  # Do not fail the workflow here
+          mkdir -p logs
+          docker run --rm \
+            -v ${{ github.workspace }}/logs:/workspace/logs \
+            selenium-tests \
+            sh -c "mvn test | tee /workspace/logs/test_output.log" || true
 
       - name: Compile and run Telegram notifier
         if: always()
@@ -48,3 +52,6 @@ jobs:
             -d chat_id=${TELEGRAM_CHAT_ID} \
             --data-urlencode text="${{ github.event.inputs.custom_message }}" \
             -d parse_mode="Markdown"
+
+
+            
