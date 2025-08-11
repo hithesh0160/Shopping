@@ -34,12 +34,13 @@ jobs:
           docker run --rm selenium-tests || true  # Do not fail the workflow here
 
       - name: Compile and run Telegram notifier
-        if: always() # Run regardless of test success/failure
+        if: always()
         run: |
           mkdir -p build
           ls -R
-          javac -d build src/main/java/com/instamart/utils/SendTelegramMessage.java
+          javac -d build shop/src/main/java/com/instamart/utils/SendTelegramMessage.java
           java -cp build com.instamart.utils.SendTelegramMessage
+
 
       - name: Send custom Telegram message (manual trigger)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.custom_message != ''
