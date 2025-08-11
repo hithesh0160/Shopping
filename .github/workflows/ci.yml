@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     env:
-      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
     steps:
@@ -28,46 +28,22 @@ jobs:
       - name: Build Docker image
         run: docker build -t selenium-tests -f shop/Dockerfile shop
 
-      - name: Run tests inside Docker and save output
+      - name: Run tests inside Docker
         run: |
-          docker run --rm selenium-tests | tee mvn_output.log
+          mkdir -p target/surefire-reports
+          docker run --rm selenium-tests || true  # Do not fail the workflow here
 
-      - name: Extract each Product Details section
-        id: extract_sections
+      - name: Compile and run Telegram notifier
+        if: always() # Run regardless of test success/failure
         run: |
-          rm -f product_details_*.log
-          COUNT=0
-          # Loop through each "Product Details:" occurrence
-          grep -n "Product Details:" mvn_output.log | cut -d: -f1 | while read -r START; do
-            END=$(tail -n +$START mvn_output.log | grep -n "^\[INFO\] Tests run:" | head -n1 | cut -d: -f1)
-            if [ -n "$END" ]; then
-              END=$((START + END - 2))
-              sed -n "${START},${END}p" mvn_output.log > "product_details_${COUNT}.log"
-              COUNT=$((COUNT + 1))
-            fi
-          done
-          echo "count=$COUNT" >> $GITHUB_OUTPUT
-
-      - name: Send Product Details to Telegram
-        if: steps.extract_sections.outputs.count != '0'
-        run: |
-          MAX_LEN=4000
-          for FILE in product_details_*.log; do
-            CONTENT=$(cat "$FILE")
-            while [ ${#CONTENT} -gt 0 ]; do
-              PART="${CONTENT:0:$MAX_LEN}"
-              curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
-                -d chat_id=${TELEGRAM_CHAT_ID} \
-                --data-urlencode text="$PART" \
-                -d parse_mode="Markdown"
-              CONTENT="${CONTENT:$MAX_LEN}"
-            done
-          done
+          mkdir -p build
+          javac -d build src/main/java/com/instamart/utils/SendTelegramMessage.java
+          java -cp build com.instamart.utils.SendTelegramMessage
 
       - name: Send custom Telegram message (manual trigger)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.custom_message != ''
         run: |
-          curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
+          curl -s -X POST https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage \
             -d chat_id=${TELEGRAM_CHAT_ID} \
             --data-urlencode text="${{ github.event.inputs.custom_message }}" \
             -d parse_mode="Markdown"

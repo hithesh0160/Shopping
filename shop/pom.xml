@@ -65,6 +65,22 @@
           <release>17</release>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+            <execution>
+                <phase>verify</phase>
+                <goals>
+                    <goal>java</goal>
+                </goals>
+                <configuration>
+                    <mainClass>com.example.SendTelegram</mainClass>
+                </configuration>
+            </execution>
+        </executions>
+    </plugin>
     </plugins>
     </build>
 
