@@ -23,13 +23,13 @@ public class SmartphonesTest extends BaseClass {
     private void sortSmartphonesOnUI() throws Exception {
     WebElement element = driver.findElement(By.xpath(InstamartLocators.sortByButton));
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", element);
-        Thread.sleep(500);
+        Thread.sleep(1000);
         element.click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.sortByDiscountOption)));
+        // wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.sortByDiscountOption)));
         driver.findElement(By.xpath(InstamartLocators.sortByDiscountOption)).click();
-        Thread.sleep(500);
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.smartphonesSortButton)));
+        Thread.sleep(1000);
+        // wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.smartphonesSortButton)));
         driver.findElement(By.xpath(InstamartLocators.smartphonesSortButton)).click();
-        Thread.sleep(500);
+        Thread.sleep(1000);
     }
 }
