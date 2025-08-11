@@ -1,16 +1,15 @@
-package com.instamart.utils;
-
-import java.io.IOException;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.file.*;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+
+import org.w3c.dom.*;
 
 public class SendTelegramMessage {
 
@@ -23,71 +22,69 @@ public class SendTelegramMessage {
             return;
         }
 
-        Path reportsDir = Paths.get("target", "surefire-reports");
-        if (!Files.exists(reportsDir)) {
-            System.err.println("Surefire reports directory not found: " + reportsDir.toAbsolutePath());
-            return;
-        }
-
         StringBuilder reportSummary = new StringBuilder();
 
-        // 1. Read TXT summaries (if any)
-        try {
-            List<String> txtReports = Files.walk(reportsDir)
-                    .filter(p -> p.toString().endsWith(".txt"))
-                    .map(p -> {
-                        try {
-                            return Files.readAllLines(p).stream().collect(Collectors.joining("\n"));
-                        } catch (IOException e) {
-                            return "";
-                        }
-                    })
-                    .collect(Collectors.toList());
+        // Path to TestNG testng-results.xml
+        Path testngResults = Paths.get("shop", "test-output", "testng-results.xml");
+        if (Files.exists(testngResults)) {
+            try {
+                DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+                Document doc = dBuilder.parse(testngResults.toFile());
+                doc.getDocumentElement().normalize();
 
-            for (String report : txtReports) {
-                for (String line : report.split("\n")) {
-                    if (line.contains("Tests run:") || line.contains("<<< FAILURE!") || line.contains("<<< ERROR!")) {
-                        reportSummary.append(line).append("\n");
-                    }
-                }
+                Element root = doc.getDocumentElement();
+                String total = root.getAttribute("total");
+                String passed = root.getAttribute("passed");
+                String failed = root.getAttribute("failed");
+                String skipped = root.getAttribute("skipped");
+
+                reportSummary.append(String.format(
+                        "TestNG Results -> Total: %s, Passed: %s, Failed: %s, Skipped: %s%n",
+                        total, passed, failed, skipped
+                ));
+            } catch (Exception e) {
+                System.err.println("Error parsing testng-results.xml");
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
-        // 2. Read XML summaries (more reliable)
-        try {
-            List<Path> xmlReports = Files.walk(reportsDir)
-                    .filter(p -> p.toString().endsWith(".xml"))
-                    .collect(Collectors.toList());
+        // Parse JUnit-style XML reports from TestNG (shop/test-output/junitreports)
+        Path junitReportsDir = Paths.get("shop", "test-output", "junitreports");
+        if (Files.exists(junitReportsDir)) {
+            try {
+                List<Path> xmlReports = Files.walk(junitReportsDir)
+                        .filter(p -> p.toString().endsWith(".xml"))
+                        .collect(Collectors.toList());
 
-            for (Path xmlFile : xmlReports) {
-                try {
-                    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-                    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-                    Document doc = dBuilder.parse(xmlFile.toFile());
-                    doc.getDocumentElement().normalize();
+                for (Path xmlFile : xmlReports) {
+                    try {
+                        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+                        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+                        Document doc = dBuilder.parse(xmlFile.toFile());
+                        doc.getDocumentElement().normalize();
 
-                    Element root = doc.getDocumentElement();
-                    if (root.getTagName().equals("testsuite")) {
-                        String name = root.getAttribute("name");
-                        String tests = root.getAttribute("tests");
-                        String failures = root.getAttribute("failures");
-                        String errors = root.getAttribute("errors");
-                        String skipped = root.getAttribute("skipped");
+                        Element root = doc.getDocumentElement();
+                        if (root.getTagName().equals("testsuite")) {
+                            String name = root.getAttribute("name");
+                            String tests = root.getAttribute("tests");
+                            String failures = root.getAttribute("failures");
+                            String errors = root.getAttribute("errors");
+                            String skipped = root.getAttribute("skipped");
 
-                        reportSummary.append(String.format(
-                                "%s -> Tests run: %s, Failures: %s, Errors: %s, Skipped: %s%n",
-                                name, tests, failures, errors, skipped
-                        ));
+                            reportSummary.append(String.format(
+                                    "%s -> Tests run: %s, Failures: %s, Errors: %s, Skipped: %s%n",
+                                    name, tests, failures, errors, skipped
+                            ));
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Error parsing JUnit XML: " + xmlFile);
+                        e.printStackTrace();
                     }
-                } catch (Exception e) {
-                    System.err.println("Error parsing XML file: " + xmlFile);
-                    e.printStackTrace();
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
         if (reportSummary.length() == 0) {
