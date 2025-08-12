@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     env:
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
     steps:
@@ -71,7 +71,7 @@ jobs:
       - name: Send custom Telegram message (manual trigger)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.custom_message != ''
         run: |
-          curl -s -X POST https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage \
+          curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
             -d chat_id=${TELEGRAM_CHAT_ID} \
             --data-urlencode text="${{ github.event.inputs.custom_message }}" \
             -d parse_mode="Markdown"
