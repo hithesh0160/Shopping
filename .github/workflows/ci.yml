@@ -28,14 +28,38 @@ jobs:
       - name: Build Docker image
         run: docker build -t selenium-tests -f shop/Dockerfile shop
 
-      - name: Run tests inside Docker and save output
+      - name: Run tests inside Docker and save mvn_output.log
         run: |
-          mkdir -p target/surefire-reports
-          mkdir -p logs
+          mkdir -p ./shop
           docker run --rm \
-            -v ${{ github.workspace }}/logs:/workspace/logs \
+            -v ${{ github.workspace }}/shop:/workspace/shop \
             selenium-tests \
-            sh -c "mvn test | tee /workspace/logs/test_output.log" || true
+            sh -c "cd /workspace/shop && mvn clean test -Dsurefire.printSummary=true -Dsurefire.useFile=false | tee mvn_output.log" || true
+
+      - name: Extract Product Details section
+        id: extract_section
+        run: |
+          if grep -q "Product Details:" ./shop/mvn_output.log; then
+            sed -n '/Product Details:/,/^\[INFO\] Tests run:/p' ./shop/mvn_output.log \
+              | sed '$d' > ./shop/product_details.log
+            echo "section_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "section_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Product Details to Telegram
+        if: steps.extract_section.outputs.section_exists == 'true'
+        run: |
+          MAX_LEN=4000
+          CONTENT=$(cat ./shop/product_details.log)
+          while [ ${#CONTENT} -gt 0 ]; do
+            PART="${CONTENT:0:$MAX_LEN}"
+            curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
+              -d chat_id=${TELEGRAM_CHAT_ID} \
+              --data-urlencode text="$PART" \
+              -d parse_mode="Markdown"
+            CONTENT="${CONTENT:$MAX_LEN}"
+          done
 
       - name: Compile and run Telegram notifier
         if: always()
@@ -44,7 +68,6 @@ jobs:
           javac -d build shop/src/main/java/com/instamart/utils/SendTelegramMessage.java
           java -cp build com.instamart.utils.SendTelegramMessage
 
-
       - name: Send custom Telegram message (manual trigger)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.custom_message != ''
         run: |
@@ -52,6 +75,4 @@ jobs:
             -d chat_id=${TELEGRAM_CHAT_ID} \
             --data-urlencode text="${{ github.event.inputs.custom_message }}" \
             -d parse_mode="Markdown"
-
-
             
