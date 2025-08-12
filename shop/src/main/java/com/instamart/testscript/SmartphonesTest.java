@@ -27,7 +27,7 @@ public class SmartphonesTest extends BaseClass {
         element.click();
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.sortByDiscountOption)));
         driver.findElement(By.xpath(InstamartLocators.sortByDiscountOption)).click();
-        // Thread.sleep(5000);
+        Thread.sleep(5000);
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.smartphonesSortButton)));
         driver.findElement(By.xpath(InstamartLocators.smartphonesSortButton)).click();
         // Thread.sleep(5000);
