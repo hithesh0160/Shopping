@@ -9,7 +9,7 @@ public class SendTelegramMessage {
         String botToken = System.getenv("TELEGRAM_BOT_TOKEN");
         String chatId = System.getenv("TELEGRAM_CHAT_ID");
 
-        File file = new File("mvn_output.log");
+        File file = new File("./shop/mvn_output.log");
         StringBuilder filteredLog = new StringBuilder();
         boolean capture = false;
 
