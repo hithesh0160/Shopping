@@ -30,11 +30,10 @@ jobs:
 
       - name: Run tests inside Docker and save mvn_output.log
         run: |
-          mkdir -p ./shop
           docker run --rm \
-            -v ${{ github.workspace }}/shop:/workspace/shop \
+            -v ${{ github.workspace }}/shop \
             selenium-tests \
-            sh -c "cd /workspace/shop && mvn clean test -Dsurefire.printSummary=true -Dsurefire.useFile=false | tee mvn_output.log" || true
+            sh -c "cd /shop && mvn clean test -Dsurefire.printSummary=true -Dsurefire.useFile=false | tee mvn_output.log" || true
 
       - name: Extract Product Details section
         id: extract_section
