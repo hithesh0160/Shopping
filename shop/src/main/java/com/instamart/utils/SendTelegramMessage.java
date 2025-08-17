@@ -13,7 +13,7 @@ public class SendTelegramMessage {
 
     public static void main(String[] args) {
         try {
-            String botToken = getenvOrFail("TELEGRAM_BOT_TOKEN");
+            String botToken = getenvOrFail("TELEGRAM_TOKEN");
             String chatId   = getenvOrFail("TELEGRAM_CHAT_ID");
 
             if (!CURRENT_LOG_FILE.exists()) {
