@@ -92,11 +92,13 @@ public class InstamartUtil extends BaseClass {
 
         // Print sorted products
         for (ProductData p : tempList) {
-            System.out.println(p+" Product: " + p.name);
+            int count = 1;
+            System.out.println(count + ". Product: " + p.name);
             System.out.println("Current Price: Rs. " + p.currentPrice +
                     ", Previous Price: Rs. " + p.previousPrice);
             System.out.println("Discount: " + p.discountText);
             System.out.println();
+            count++;
         }
     }
 }
