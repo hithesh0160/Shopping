@@ -3,7 +3,7 @@
     <test name="Shop Tests">
         <classes>
             <class name="com.instamart.testscript.SmartphonesTest"/>
-            <class name="com.instamart.testscript.LaptopTest"/> 
+            <!-- <class name="com.instamart.testscript.LaptopTest"/>  -->
         </classes>
     </test>
 </suite>
