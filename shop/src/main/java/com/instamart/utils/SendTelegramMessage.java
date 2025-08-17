@@ -8,21 +8,22 @@ import java.net.URLEncoder;
 public class SendTelegramMessage {
 
     private static final int TELEGRAM_LIMIT = 3900; // keep under 4096 to be safe
+    private static final File PREVIOUS_LOG_FILE = new File("./shop/previous.log");
+    private static final File CURRENT_LOG_FILE  = new File("./shop/mvn_output.log");
 
     public static void main(String[] args) {
         try {
             String botToken = getenvOrFail("TELEGRAM_BOT_TOKEN");
             String chatId   = getenvOrFail("TELEGRAM_CHAT_ID");
 
-            File file = new File("./shop/mvn_output.log");
-            if (!file.exists()) {
-                System.err.println("❌ Log file not found: " + file.getAbsolutePath());
+            if (!CURRENT_LOG_FILE.exists()) {
+                System.err.println("❌ Log file not found: " + CURRENT_LOG_FILE.getAbsolutePath());
                 return;
             }
 
-            String message = extractSection(file,
-                    "Product Details:",            // start marker
-                    "^\\s*\\[INFO\\]\\s+Tests run:" // end marker (regex), color-safe after stripping
+            String message = extractSection(CURRENT_LOG_FILE,
+                    "Product Details:",
+                    "^\\s*\\[INFO\\]\\s+Tests run:"
             );
 
             if (message.isEmpty()) {
@@ -30,8 +31,44 @@ public class SendTelegramMessage {
                 return;
             }
 
-            sendToTelegramInChunks(botToken, chatId, message);
+            // Compare with previous run
+            if (isSameAsPrevious(message)) {
+                System.out.println("✅ No change since last run. Skipping Telegram send.");
+            } else {
+                System.out.println("📩 Change detected. Sending to Telegram...");
+                sendToTelegramInChunks(botToken, chatId, message);
+                saveAsPrevious(message);
+            }
+
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static boolean isSameAsPrevious(String currentMessage) {
+        if (!PREVIOUS_LOG_FILE.exists()) {
+            System.out.println("ℹ️ No previous log found. Will treat as new run.");
+            return false;
+        }
+        try {
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader br = new BufferedReader(new FileReader(PREVIOUS_LOG_FILE))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    sb.append(line).append("\n");
+                }
+            }
+            return currentMessage.trim().equals(sb.toString().trim());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private static void saveAsPrevious(String message) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(PREVIOUS_LOG_FILE))) {
+            bw.write(message);
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -44,7 +81,6 @@ public class SendTelegramMessage {
         return v;
     }
 
-    /** Reads file, strips ANSI, returns text between start literal and first line matching endRegex. */
     private static String extractSection(File file, String startLiteral, String endRegex) throws IOException {
         StringBuilder out = new StringBuilder();
         boolean capture = false;
@@ -60,7 +96,6 @@ public class SendTelegramMessage {
 
                 if (capture) {
                     if (line.matches(endRegex)) {
-                        // stop BEFORE the summary line
                         break;
                     }
                     out.append(line).append('\n');
@@ -70,9 +105,7 @@ public class SendTelegramMessage {
         return out.toString().trim();
     }
 
-    /** Remove ANSI escape sequences (colors, cursor moves, etc.). */
     private static String stripAnsi(String s) {
-        // General ANSI escape sequence pattern
         return s.replaceAll("\u001B\\[[;?0-9]*[ -/]*[@-~]", "");
     }
 
@@ -81,7 +114,6 @@ public class SendTelegramMessage {
         while (idx < text.length()) {
             int end = Math.min(idx + TELEGRAM_LIMIT, text.length());
 
-            // try to break on a newline if possible
             int lastNewline = text.lastIndexOf('\n', end);
             if (lastNewline > idx && (end - lastNewline) < 300) {
                 end = lastNewline;
@@ -93,11 +125,10 @@ public class SendTelegramMessage {
         }
     }
 
-    /** Simple POST without parse_mode to avoid Markdown/HTML parsing errors. */
     private static void sendTelegram(String botToken, String chatId, String text) throws IOException {
         String apiUrl = "https://api.telegram.org/bot" + botToken + "/sendMessage";
         String body = "chat_id=" + URLEncoder.encode(chatId, "UTF-8")
-                    + "&text="   + URLEncoder.encode(text, "UTF-8");
+                + "&text="   + URLEncoder.encode(text, "UTF-8");
 
         HttpURLConnection conn = (HttpURLConnection) new URL(apiUrl).openConnection();
         conn.setRequestMethod("POST");
