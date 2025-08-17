@@ -91,8 +91,8 @@ public class InstamartUtil extends BaseClass {
         tempList.sort((p1, p2) -> Integer.compare(p2.discountValue, p1.discountValue));
 
         // Print sorted products
+        int count = 1;
         for (ProductData p : tempList) {
-            int count = 1;
             System.out.println(count + ". Product: " + p.name);
             System.out.println("Current Price: Rs. " + p.currentPrice +
                     ", Previous Price: Rs. " + p.previousPrice);
