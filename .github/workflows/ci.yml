@@ -2,7 +2,8 @@ name: Notify Telegram Test Results (Docker)
 
 on:
   schedule:
-    - cron: "0 8,10,12,14,16,18,20,21 * * *"
+    - cron: "0 * * * *"
+
   push:
     branches:
       - main
