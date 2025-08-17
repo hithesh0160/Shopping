@@ -24,13 +24,13 @@ public class SmartphonesTest extends BaseClass {
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.sortByButton)));
     WebElement element = driver.findElement(By.xpath(InstamartLocators.sortByButton));
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", element);
-        // Thread.sleep(5000);
+        Thread.sleep(5000);
         element.click();
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.sortByDiscountOption)));
         driver.findElement(By.xpath(InstamartLocators.sortByDiscountOption)).click();
         Thread.sleep(5000);
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(InstamartLocators.smartphonesSortButton)));
         driver.findElement(By.xpath(InstamartLocators.smartphonesSortButton)).click();
-        // Thread.sleep(5000);
+        Thread.sleep(5000);
     }
 }
