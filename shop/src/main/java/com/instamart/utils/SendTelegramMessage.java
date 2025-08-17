@@ -6,15 +6,13 @@ import java.net.URL;
 import java.net.URLEncoder;
 
 public class SendTelegramMessage {
+
+    private static final int TELEGRAM_LIMIT = 3900; // keep under 4096 to be safe
+
     public static void main(String[] args) {
         try {
-            String botToken = System.getenv("TELEGRAM_BOT_TOKEN");
-            String chatId   = System.getenv("TELEGRAM_CHAT_ID");
-
-            if (botToken == null || chatId == null) {
-                System.err.println("❌ Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID environment variables.");
-                return;
-            }
+            String botToken = getenvOrFail("TELEGRAM_BOT_TOKEN");
+            String chatId   = getenvOrFail("TELEGRAM_CHAT_ID");
 
             File file = new File("./shop/mvn_output.log");
             if (!file.exists()) {
@@ -22,54 +20,101 @@ public class SendTelegramMessage {
                 return;
             }
 
-            String message = extractLogSection(file);
-            if (!message.isEmpty()) {
-                sendTelegramMessage(botToken, chatId, message);
-            } else {
-                System.out.println("ℹ️ No matching log section found.");
+            String message = extractSection(file,
+                    "Product Details:",            // start marker
+                    "^\\s*\\[INFO\\]\\s+Tests run:" // end marker (regex), color-safe after stripping
+            );
+
+            if (message.isEmpty()) {
+                System.out.println("ℹ️ No matching 'Product Details' section found.");
+                return;
             }
+
+            sendToTelegramInChunks(botToken, chatId, message);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    /** Extracts the log section between "Product Details:" and before "[INFO] Tests run:" */
-    private static String extractLogSection(File file) throws IOException {
-        StringBuilder filteredLog = new StringBuilder();
+    private static String getenvOrFail(String key) {
+        String v = System.getenv(key);
+        if (v == null || v.isEmpty()) {
+            throw new IllegalStateException("Missing env var: " + key);
+        }
+        return v;
+    }
+
+    /** Reads file, strips ANSI, returns text between start literal and first line matching endRegex. */
+    private static String extractSection(File file, String startLiteral, String endRegex) throws IOException {
+        StringBuilder out = new StringBuilder();
         boolean capture = false;
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (!capture && line.contains("Product Details:")) {
+            String raw;
+            while ((raw = br.readLine()) != null) {
+                String line = stripAnsi(raw);
+
+                if (!capture && line.contains(startLiteral)) {
                     capture = true;
                 }
 
                 if (capture) {
-                    if (line.contains("[INFO] Tests run:")) {
-                        // ✅ stop before appending summary
+                    if (line.matches(endRegex)) {
+                        // stop BEFORE the summary line
                         break;
                     }
-                    filteredLog.append(line).append("\n");
+                    out.append(line).append('\n');
                 }
             }
         }
-        return filteredLog.toString().trim();
+        return out.toString().trim();
     }
 
-    /** Sends the given text to Telegram */
-    private static void sendTelegramMessage(String botToken, String chatId, String text) throws Exception {
+    /** Remove ANSI escape sequences (colors, cursor moves, etc.). */
+    private static String stripAnsi(String s) {
+        // General ANSI escape sequence pattern
+        return s.replaceAll("\u001B\\[[;?0-9]*[ -/]*[@-~]", "");
+    }
+
+    private static void sendToTelegramInChunks(String botToken, String chatId, String text) throws IOException {
+        int idx = 0;
+        while (idx < text.length()) {
+            int end = Math.min(idx + TELEGRAM_LIMIT, text.length());
+
+            // try to break on a newline if possible
+            int lastNewline = text.lastIndexOf('\n', end);
+            if (lastNewline > idx && (end - lastNewline) < 300) {
+                end = lastNewline;
+            }
+
+            String part = text.substring(idx, end);
+            sendTelegram(botToken, chatId, part);
+            idx = end;
+        }
+    }
+
+    /** Simple POST without parse_mode to avoid Markdown/HTML parsing errors. */
+    private static void sendTelegram(String botToken, String chatId, String text) throws IOException {
         String apiUrl = "https://api.telegram.org/bot" + botToken + "/sendMessage";
-        String urlParameters = "chat_id=" + chatId + "&text=" + URLEncoder.encode(text, "UTF-8");
+        String body = "chat_id=" + URLEncoder.encode(chatId, "UTF-8")
+                    + "&text="   + URLEncoder.encode(text, "UTF-8");
 
-        HttpURLConnection conn = (HttpURLConnection) new URL(apiUrl + "?" + urlParameters).openConnection();
-        conn.setRequestMethod("GET");
+        HttpURLConnection conn = (HttpURLConnection) new URL(apiUrl).openConnection();
+        conn.setRequestMethod("POST");
+        conn.setDoOutput(true);
+        conn.setConnectTimeout(15000);
+        conn.setReadTimeout(15000);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
 
-        int responseCode = conn.getResponseCode();
-        System.out.println("✅ Telegram API Response Code: " + responseCode);
+        try (OutputStream os = conn.getOutputStream()) {
+            os.write(body.getBytes("UTF-8"));
+        }
+
+        int code = conn.getResponseCode();
+        System.out.println("Telegram HTTP " + code);
 
         try (BufferedReader in = new BufferedReader(new InputStreamReader(
-                responseCode == 200 ? conn.getInputStream() : conn.getErrorStream()))) {
+                code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream(), "UTF-8"))) {
             String line;
             while ((line = in.readLine()) != null) {
                 System.out.println(line);
