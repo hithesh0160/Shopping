@@ -4,63 +4,64 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class SendTelegramMessage {
 
     private static final int TELEGRAM_LIMIT = 3900; // keep under 4096 to be safe
     private static final File PREVIOUS_LOG_FILE = new File("./shop/previous.log");
     private static final File CURRENT_LOG_FILE  = new File("./shop/mvn_output.log");
+    private static final Logger logger = Logger.getLogger(SendTelegramMessage.class.getName());
 
     public static void main(String[] args) {
         try {
-            String botToken = getenvOrFail("TELEGRAM_TOKEN");
-            String chatId   = getenvOrFail("TELEGRAM_CHAT_ID");
+            String botToken = args.length > 0 ? args[0] : getenvOrFail("TELEGRAM_TOKEN");
+            String chatId   = args.length > 1 ? args[1] : getenvOrFail("TELEGRAM_CHAT_ID");
 
             if (!CURRENT_LOG_FILE.exists()) {
-                System.err.println("❌ Log file not found: " + CURRENT_LOG_FILE.getAbsolutePath());
+                logger.severe("❌ Log file not found: " + CURRENT_LOG_FILE.getAbsolutePath());
                 return;
             }
 
             String message = extractSection(CURRENT_LOG_FILE,
                     "Product Details:",
-                    "^\\s*\\[INFO\\]\\s+Tests run:"
-            );
+                    "^\\[INFO\\] Tests run: .* - in .*");
 
             if (message.isEmpty()) {
-                System.out.println("ℹ️ No matching 'Product Details' section found.");
+                logger.info("ℹ️ No matching 'Product Details' section found.");
                 return;
             }
 
-            // Compare with previous run
             if (isSameAsPrevious(message)) {
-                System.out.println("✅ No change since last run. Skipping Telegram send.");
+                logger.info("✅ No change since last run. Skipping Telegram send.");
             } else {
-                System.out.println("📩 Change detected. Sending to Telegram...");
+                logger.info("📩 Change detected. Sending to Telegram...");
                 sendToTelegramInChunks(botToken, chatId, message);
                 saveAsPrevious(message);
+                logger.info("✅ Message successfully sent and saved.");
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "An error occurred:", e);
         }
     }
 
     private static boolean isSameAsPrevious(String currentMessage) {
         if (!PREVIOUS_LOG_FILE.exists()) {
-            System.out.println("ℹ️ No previous log found. Will treat as new run.");
+            logger.info("ℹ️ No previous log found. Will treat as new run.");
             return false;
         }
-        try {
+        try (BufferedReader br = new BufferedReader(new FileReader(PREVIOUS_LOG_FILE))) {
             StringBuilder sb = new StringBuilder();
-            try (BufferedReader br = new BufferedReader(new FileReader(PREVIOUS_LOG_FILE))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    sb.append(line).append("\n");
-                }
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line).append("\n");
             }
             return currentMessage.trim().equals(sb.toString().trim());
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Failed to read previous log file:", e);
             return false;
         }
     }
@@ -69,7 +70,7 @@ public class SendTelegramMessage {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(PREVIOUS_LOG_FILE))) {
             bw.write(message);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Failed to save previous log file:", e);
         }
     }
 
@@ -92,6 +93,7 @@ public class SendTelegramMessage {
 
                 if (!capture && line.contains(startLiteral)) {
                     capture = true;
+                    continue; // Skip the line containing startLiteral
                 }
 
                 if (capture) {
@@ -115,7 +117,7 @@ public class SendTelegramMessage {
             int end = Math.min(idx + TELEGRAM_LIMIT, text.length());
 
             int lastNewline = text.lastIndexOf('\n', end);
-            if (lastNewline > idx && (end - lastNewline) < 300) {
+            if (lastNewline > idx + 100) { // Avoid very small chunks
                 end = lastNewline;
             }
 
@@ -127,8 +129,8 @@ public class SendTelegramMessage {
 
     private static void sendTelegram(String botToken, String chatId, String text) throws IOException {
         String apiUrl = "https://api.telegram.org/bot" + botToken + "/sendMessage";
-        String body = "chat_id=" + URLEncoder.encode(chatId, "UTF-8")
-                + "&text="   + URLEncoder.encode(text, "UTF-8");
+        String body = "chat_id=" + URLEncoder.encode(chatId, StandardCharsets.UTF_8.name())
+                + "&text=" + URLEncoder.encode(text, StandardCharsets.UTF_8.name());
 
         HttpURLConnection conn = (HttpURLConnection) new URL(apiUrl).openConnection();
         conn.setRequestMethod("POST");
@@ -138,17 +140,18 @@ public class SendTelegramMessage {
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
 
         try (OutputStream os = conn.getOutputStream()) {
-            os.write(body.getBytes("UTF-8"));
+            os.write(body.getBytes(StandardCharsets.UTF_8));
         }
 
         int code = conn.getResponseCode();
-        System.out.println("Telegram HTTP " + code);
+        if (code < 200 || code >= 300) {
+            throw new IOException("Failed to send message to Telegram: HTTP " + code);
+        }
 
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(
-                code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream(), "UTF-8"))) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
             String line;
             while ((line = in.readLine()) != null) {
-                System.out.println(line);
+                logger.info(line);
             }
         }
     }
