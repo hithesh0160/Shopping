@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - main
+
   workflow_dispatch:
     inputs:
       custom_message:
@@ -49,7 +50,6 @@ jobs:
             echo "section_exists=false" >> $GITHUB_OUTPUT
           fi
 
-      # Download previous logs (if any)
       - name: Download previous product_details.log
         uses: actions/download-artifact@v4
         with:
@@ -67,24 +67,9 @@ jobs:
               echo "changed=true" >> $GITHUB_OUTPUT
             fi
           else
-            # First run, always considered as "changed"
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Send Product Details to Telegram
-        if: steps.extract_section.outputs.section_exists == 'true' && steps.compare.outputs.changed == 'true'
-        run: |
-          MAX_LEN=4000
-          CONTENT=$(cat ./shop/product_details.log)
-          while [ ${#CONTENT} -gt 0 ]; do
-            PART="${CONTENT:0:$MAX_LEN}"
-            curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
-              -d chat_id=${TELEGRAM_CHAT_ID} \
-              --data-urlencode text="$PART"
-            CONTENT="${CONTENT:$MAX_LEN}"
-          done
-
-      # Save current log as artifact for the next run
       - name: Upload product_details.log for next run
         if: steps.extract_section.outputs.section_exists == 'true'
         uses: actions/upload-artifact@v4
@@ -93,11 +78,14 @@ jobs:
           path: ./shop/product_details.log
           retention-days: 3
 
-      - name: Compile and run Telegram notifier
-        if: always()
+      - name: Compile Telegram Notifier
         run: |
           mkdir -p build
           javac -d build shop/src/main/java/com/instamart/utils/SendTelegramMessage.java
+
+      - name: Run Telegram Notifier
+        if: steps.extract_section.outputs.section_exists == 'true' && steps.compare.outputs.changed == 'true'
+        run: |
           java -cp build com.instamart.utils.SendTelegramMessage
 
       - name: Send custom Telegram message (manual trigger)
