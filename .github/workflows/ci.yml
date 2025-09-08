@@ -57,19 +57,6 @@ jobs:
           path: ./shop/previous
         continue-on-error: true
 
-      - name: Compare logs
-        id: compare
-        run: |
-          if [ -f ./shop/previous/product_details.log ]; then
-            if diff -q ./shop/product_details.log ./shop/previous/product_details.log > /dev/null; then
-              echo "changed=false" >> $GITHUB_OUTPUT
-            else
-              echo "changed=true" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-          fi
-
       - name: Upload product_details.log for next run
         if: steps.extract_section.outputs.section_exists == 'true'
         uses: actions/upload-artifact@v4
@@ -84,7 +71,7 @@ jobs:
           javac -d build shop/src/main/java/com/instamart/utils/SendTelegramMessage.java
 
       - name: Run Telegram Notifier
-        if: steps.extract_section.outputs.section_exists == 'true' && steps.compare.outputs.changed == 'true'
+        if: steps.extract_section.outputs.section_exists == 'true'
         run: |
           java -cp build com.instamart.utils.SendTelegramMessage
 

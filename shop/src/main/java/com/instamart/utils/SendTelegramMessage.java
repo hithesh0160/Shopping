@@ -10,9 +10,9 @@ import java.util.logging.Logger;
 
 public class SendTelegramMessage {
 
-    private static final int TELEGRAM_LIMIT = 3900; // keep under 4096 to be safe
-    private static final File PREVIOUS_LOG_FILE = new File("./shop/previous.log");
-    private static final File CURRENT_LOG_FILE  = new File("./shop/mvn_output.log");
+    private static final int TELEGRAM_LIMIT = 3900;
+    private static final File PREVIOUS_LOG_FILE = new File("./shop/previous/product_details.log");
+    private static final File CURRENT_LOG_FILE  = new File("./shop/product_details.log");
     private static final Logger logger = Logger.getLogger(SendTelegramMessage.class.getName());
 
     public static void main(String[] args) {
@@ -21,26 +21,23 @@ public class SendTelegramMessage {
             String chatId   = args.length > 1 ? args[1] : getenvOrFail("TELEGRAM_CHAT_ID");
 
             if (!CURRENT_LOG_FILE.exists()) {
-                logger.severe("❌ Log file not found: " + CURRENT_LOG_FILE.getAbsolutePath());
+                logger.severe("❌ Current log file not found: " + CURRENT_LOG_FILE.getAbsolutePath());
                 return;
             }
 
-            String message = extractSection(CURRENT_LOG_FILE,
-                    "Product Details:",
-                    "^\\[INFO\\] Tests run: .* - in .*");
+            String currentMessage = readFile(CURRENT_LOG_FILE);
 
-            if (message.isEmpty()) {
-                logger.info("ℹ️ No matching 'Product Details' section found.");
+            if (currentMessage.isEmpty()) {
+                logger.info("ℹ️ Product details section is empty. Nothing to send.");
                 return;
             }
 
-            if (isSameAsPrevious(message)) {
-                logger.info("✅ No change since last run. Skipping Telegram send.");
+            if (isSameAsPrevious(currentMessage)) {
+                logger.info("✅ Current logs match previous logs. Skipping Telegram message.");
             } else {
-                logger.info("📩 Change detected. Sending to Telegram...");
-                sendToTelegramInChunks(botToken, chatId, message);
-                saveAsPrevious(message);
-                logger.info("✅ Message successfully sent and saved.");
+                logger.info("📩 Logs changed. Sending Telegram message...");
+                sendToTelegramInChunks(botToken, chatId, currentMessage);
+                logger.info("✅ Message sent.");
             }
 
         } catch (Exception e) {
@@ -50,28 +47,28 @@ public class SendTelegramMessage {
 
     private static boolean isSameAsPrevious(String currentMessage) {
         if (!PREVIOUS_LOG_FILE.exists()) {
-            logger.info("ℹ️ No previous log found. Will treat as new run.");
+            logger.info("ℹ️ No previous log file found. Treating as first run.");
             return false;
         }
-        try (BufferedReader br = new BufferedReader(new FileReader(PREVIOUS_LOG_FILE))) {
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null) {
-                sb.append(line).append("\n");
-            }
-            return currentMessage.trim().equals(sb.toString().trim());
+
+        try {
+            String previousMessage = readFile(PREVIOUS_LOG_FILE);
+            return currentMessage.trim().equals(previousMessage.trim());
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Failed to read previous log file:", e);
             return false;
         }
     }
 
-    private static void saveAsPrevious(String message) {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(PREVIOUS_LOG_FILE))) {
-            bw.write(message);
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Failed to save previous log file:", e);
+    private static String readFile(File file) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
         }
+        return sb.toString().trim();
     }
 
     private static String getenvOrFail(String key) {
@@ -82,42 +79,13 @@ public class SendTelegramMessage {
         return v;
     }
 
-    private static String extractSection(File file, String startLiteral, String endRegex) throws IOException {
-        StringBuilder out = new StringBuilder();
-        boolean capture = false;
-
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String raw;
-            while ((raw = br.readLine()) != null) {
-                String line = stripAnsi(raw);
-
-                if (!capture && line.contains(startLiteral)) {
-                    capture = true;
-                    continue; // Skip the line containing startLiteral
-                }
-
-                if (capture) {
-                    if (line.matches(endRegex)) {
-                        break;
-                    }
-                    out.append(line).append('\n');
-                }
-            }
-        }
-        return out.toString().trim();
-    }
-
-    private static String stripAnsi(String s) {
-        return s.replaceAll("\u001B\\[[;?0-9]*[ -/]*[@-~]", "");
-    }
-
     private static void sendToTelegramInChunks(String botToken, String chatId, String text) throws IOException {
         int idx = 0;
         while (idx < text.length()) {
             int end = Math.min(idx + TELEGRAM_LIMIT, text.length());
 
             int lastNewline = text.lastIndexOf('\n', end);
-            if (lastNewline > idx + 100) { // Avoid very small chunks
+            if (lastNewline > idx + 100) {
                 end = lastNewline;
             }
 
@@ -156,4 +124,3 @@ public class SendTelegramMessage {
         }
     }
 }
-
