@@ -90,10 +90,10 @@ public class InstamartUtil extends BaseClass {
         // Sort by discount descending
         tempList.sort((p1, p2) -> Integer.compare(p2.discountValue, p1.discountValue));
 
-        // Print sorted products
-        for (int i = 0; i < tempList.size(); i++) {
+        // Print sorted products in reverse order
+        for (int i = tempList.size() - 1; i >= 0; i--) {
             ProductData p = tempList.get(i);
-            System.out.println((i + 1) + ". Product: " + p.name);
+            System.out.println((tempList.size() - i) + ". Product: " + p.name);
             System.out.println("Current Price: Rs. " + p.currentPrice +
                     ", Previous Price: Rs. " + p.previousPrice);
             System.out.println("Discount: " + p.discountText);
